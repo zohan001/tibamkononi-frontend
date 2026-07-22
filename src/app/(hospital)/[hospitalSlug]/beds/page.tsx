@@ -3,26 +3,45 @@
 import { useParams } from 'next/navigation';
 import { HospitalSidebar } from '@/components/layout/hospital-sidebar';
 import { BedGrid } from '@/components/hospital/bed-grid';
-
-const mockWards = [
-  { id: '1', name: 'General Ward A', bedCount: 30, bedsOccupied: 24, type: 'General' },
-  { id: '2', name: 'General Ward B', bedCount: 25, bedsOccupied: 22, type: 'General' },
-  { id: '3', name: 'Maternity Ward', bedCount: 20, bedsOccupied: 20, type: 'Maternity' },
-  { id: '4', name: 'ICU', bedCount: 8, bedsOccupied: 6, type: 'ICU' },
-  { id: '5', name: 'Paediatric Ward', bedCount: 15, bedsOccupied: 10, type: 'Paediatric' },
-  { id: '6', name: 'Surgical Ward', bedCount: 12, bedsOccupied: 5, type: 'Surgical' },
-];
+import { useHospital } from '@/hooks/use-hospitals';
+import { Loader2 } from 'lucide-react';
 
 export default function BedsPage() {
   const params = useParams();
   const slug = params.hospitalSlug as string;
+  const { data: hospital, isLoading } = useHospital(slug);
+
+  const wards = (hospital?.buildings || []).flatMap((b) =>
+    b.wards.map((w) => ({
+      id: w.id,
+      name: w.name,
+      bedCount: w.bedCount,
+      bedsOccupied: w.bedsOccupied,
+      type: w.type,
+    }))
+  );
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-[calc(100vh-200px)]">
+        <HospitalSidebar hospitalSlug={slug} hospitalName={slug.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())} />
+        <div className="flex-1 p-6 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-[calc(100vh-200px)]">
-      <HospitalSidebar hospitalSlug={slug} hospitalName={slug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())} />
+      <HospitalSidebar hospitalSlug={slug} hospitalName={hospital?.name || slug.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())} />
       <div className="flex-1 p-6">
         <h1 className="text-2xl font-bold mb-6">Bed Management</h1>
-        <BedGrid wards={mockWards} />
+        {wards.length > 0 ? (
+          <BedGrid wards={wards} />
+        ) : (
+          <div className="text-center py-16 text-slate-500">No ward data available</div>
+        )}
       </div>
     </div>
   );

@@ -19,7 +19,7 @@ interface Patient {
   fullName: string
   age: number
   gender: string
-  diagnosis: string
+  diagnosis?: string
   registeredAt: string
 }
 

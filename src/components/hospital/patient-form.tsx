@@ -25,6 +25,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { useRegisterPatient } from '@/hooks/use-patients'
+import { toast } from 'sonner'
 
 const patientSchema = z.object({
   fullName: z.string().min(2, 'Name is required'),
@@ -40,8 +42,9 @@ const patientSchema = z.object({
 
 type PatientValues = z.infer<typeof patientSchema>
 
-export function PatientForm() {
+export function PatientForm({ hospitalSlug }: { hospitalSlug: string }) {
   const [isRecording, setIsRecording] = useState(false)
+  const registerPatient = useRegisterPatient(hospitalSlug)
 
   const form = useForm<PatientValues>({
     resolver: zodResolver(patientSchema),
@@ -59,7 +62,15 @@ export function PatientForm() {
   })
 
   function onSubmit(values: PatientValues) {
-    console.log('Patient registered:', values)
+    registerPatient.mutate(values, {
+      onSuccess: () => {
+        toast.success('Patient registered successfully!')
+        form.reset()
+      },
+      onError: (error) => {
+        toast.error(`Registration failed: ${error.message}`)
+      },
+    })
   }
 
   const toggleRecording = () => {
@@ -216,10 +227,10 @@ export function PatientForm() {
             />
 
             <div className="flex items-center gap-3">
-              <Button type="submit" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting && (
+              <Button type="submit" disabled={form.formState.isSubmitting || registerPatient.isPending}>
+                {form.formState.isSubmitting || registerPatient.isPending ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                )}
+                ) : null}
                 Register Patient
               </Button>
 

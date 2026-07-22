@@ -9,28 +9,22 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { CheckCircle, Building2, Calendar, User } from 'lucide-react';
-
-const mockHospitals = [
-  { name: 'Mama Ngina Hospital', slug: 'mama-ngina', distance: 2.3, rating: 4.2, waitTime: '25 min', bedsAvailable: 12 },
-  { name: 'Coast General Hospital', slug: 'coast-general', distance: 5.8, rating: 4.5, waitTime: '15 min', bedsAvailable: 23 },
-  { name: 'Likoni PHC', slug: 'likoni-phc', distance: 1.1, rating: 3.8, waitTime: '40 min', bedsAvailable: 8 },
-];
-
-const mockSlots = [
-  { time: '8:00 AM', doctor: 'Dr. Wanjiku', available: true, gemmaTip: 'Shortest wait time' },
-  { time: '8:30 AM', doctor: 'Dr. Wanjiku', available: true },
-  { time: '9:00 AM', doctor: 'Dr. Otieno', available: false, reason: 'Absent tomorrow' },
-  { time: '9:30 AM', doctor: 'Dr. Wanjiku', available: true },
-  { time: '10:00 AM', doctor: 'Dr. Otieno', available: true },
-  { time: '10:30 AM', doctor: 'Dr. Wanjiku', available: true },
-];
+import { CheckCircle, Building2, Calendar, User, Loader2 } from 'lucide-react';
+import { useHospitalsList } from '@/hooks/use-hospitals';
+import { useAvailableSlots, useBookAppointment } from '@/hooks/use-appointments';
+import { format } from 'date-fns';
+import { toast } from 'sonner';
 
 export default function AppointmentsPage() {
   const [step, setStep] = useState(1);
   const [selectedHospital, setSelectedHospital] = useState('');
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedSlot, setSelectedSlot] = useState('');
   const [formData, setFormData] = useState({ patientName: '', patientPhone: '', nhifNumber: '', reason: '' });
+
+  const { data: hospitals, isLoading: hospitalsLoading } = useHospitalsList();
+  const { data: slots, isLoading: slotsLoading } = useAvailableSlots(selectedHospital, format(selectedDate, 'yyyy-MM-dd'));
+  const bookAppointment = useBookAppointment();
 
   const steps = [
     { label: 'Hospital', icon: Building2 },
@@ -38,6 +32,21 @@ export default function AppointmentsPage() {
     { label: 'Details', icon: User },
     { label: 'Confirm', icon: CheckCircle },
   ];
+
+  const hospitalList = (hospitals || []).map((h) => ({
+    slug: h.slug,
+    name: h.name,
+    distance: 0,
+    rating: 4.0,
+    waitTime: '25 min',
+    bedsAvailable: (h.buildings || []).flatMap((b) => b.wards).reduce((sum, w) => sum + (w.bedCount - w.bedsOccupied), 0),
+  }));
+
+  const timeSlots = (slots || []).map((s) => ({
+    time: s.time,
+    doctor: s.doctorName,
+    available: true,
+  }));
 
   const handleHospitalSelect = (slug: string) => {
     setSelectedHospital(slug);
@@ -50,7 +59,33 @@ export default function AppointmentsPage() {
   };
 
   const handleConfirm = () => {
-    setStep(4);
+    if (!selectedHospital || !selectedSlot || !formData.patientName || !formData.patientPhone) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    bookAppointment.mutate(
+      {
+        hospitalSlug: selectedHospital,
+        department: 'General Outpatient',
+        doctorName: '',
+        date: format(selectedDate, 'yyyy-MM-dd'),
+        time: selectedSlot,
+        patientName: formData.patientName,
+        patientPhone: formData.patientPhone,
+        nhifNumber: formData.nhifNumber || undefined,
+        reason: formData.reason,
+      },
+      {
+        onSuccess: () => {
+          setStep(4);
+          toast.success('Appointment booked successfully!');
+        },
+        onError: (error) => {
+          toast.error(`Booking failed: ${error.message}`);
+        },
+      }
+    );
   };
 
   return (
@@ -74,17 +109,29 @@ export default function AppointmentsPage() {
         </div>
       </div>
 
-      {step === 1 && (
-        <HospitalPicker hospitals={mockHospitals} onSelect={handleHospitalSelect} />
+      {hospitalsLoading ? (
+        <div className="text-center py-16">
+          <Loader2 className="h-12 w-12 animate-spin text-slate-400 mx-auto mb-4" />
+          <p className="text-lg text-slate-600">Loading hospitals...</p>
+        </div>
+      ) : step === 1 && (
+        <HospitalPicker hospitals={hospitalList} onSelect={handleHospitalSelect} />
       )}
 
       {step === 2 && (
-        <SlotPicker
-          slots={mockSlots}
-          selectedDate={new Date()}
-          onDateChange={() => {}}
-          onSlotSelect={handleSlotSelect}
-        />
+        slotsLoading ? (
+          <div className="text-center py-16">
+            <Loader2 className="h-12 w-12 animate-spin text-slate-400 mx-auto mb-4" />
+            <p className="text-lg text-slate-600">Loading available slots...</p>
+          </div>
+        ) : (
+          <SlotPicker
+            slots={timeSlots}
+            selectedDate={selectedDate}
+            onDateChange={setSelectedDate}
+            onSlotSelect={handleSlotSelect}
+          />
+        )
       )}
 
       {step === 3 && (
@@ -109,7 +156,16 @@ export default function AppointmentsPage() {
               <Label>Reason for Visit</Label>
               <Textarea placeholder="Describe your symptoms or reason for visit..." value={formData.reason} onChange={(e) => setFormData({ ...formData, reason: e.target.value })} />
             </div>
-            <Button onClick={handleConfirm} className="w-full" size="lg">Confirm Booking</Button>
+            <Button onClick={handleConfirm} className="w-full" size="lg" disabled={bookAppointment.isPending}>
+              {bookAppointment.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Booking...
+                </>
+              ) : (
+                'Confirm Booking'
+              )}
+            </Button>
           </CardContent>
         </Card>
       )}
@@ -117,10 +173,10 @@ export default function AppointmentsPage() {
       {step === 4 && (
         <BookingConfirmation
           booking={{
-            date: 'Tomorrow',
+            date: format(selectedDate, 'MMMM d, yyyy'),
             time: selectedSlot,
-            hospitalName: mockHospitals.find(h => h.slug === selectedHospital)?.name || '',
-            doctorName: 'Dr. Wanjiku',
+            hospitalName: hospitalList.find((h) => h.slug === selectedHospital)?.name || '',
+            doctorName: '',
           }}
         />
       )}

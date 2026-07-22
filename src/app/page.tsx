@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Building2, Ambulance, Stethoscope, Calendar, ArrowRight, Heart } from 'lucide-react';
 import { GemmaBadge } from '@/components/shared/gemma-badge';
+import { useCountyDashboard } from '@/hooks/use-county';
 
 const features = [
   {
@@ -33,13 +34,21 @@ const features = [
   },
 ];
 
-const stats = [
-  { value: '12+', label: 'Hospitals Registered' },
-  { value: '1,240', label: 'Beds Tracked' },
-  { value: '45,000+', label: 'Medicines Monitored' },
-];
-
 export default function LandingPage() {
+  const { data: dashboardData } = useCountyDashboard();
+
+  const stats = dashboardData
+    ? [
+        { value: `${dashboardData.hospitalsActive}`, label: 'Hospitals Active' },
+        { value: `${dashboardData.bedsAvailable.toLocaleString()}`, label: 'Beds Available' },
+        { value: `${dashboardData.criticalAlerts}`, label: 'Critical Alerts' },
+      ]
+    : [
+        { value: '12+', label: 'Hospitals Registered' },
+        { value: '1,240', label: 'Beds Tracked' },
+        { value: '45,000+', label: 'Medicines Monitored' },
+      ];
+
   return (
     <div className="flex flex-col">
       {/* Hero Section */}

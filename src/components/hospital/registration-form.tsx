@@ -27,6 +27,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import { useRegisterHospital } from '@/hooks/use-hospitals'
+import { toast } from 'sonner'
 
 const schema = z.object({
   name: z.string().min(2, 'Hospital name is required'),
@@ -75,6 +77,7 @@ const amenitiesList = [
 export function RegistrationForm() {
   const [step, setStep] = useState(0)
   const progress = ((step + 1) / steps.length) * 100
+  const registerHospital = useRegisterHospital()
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -102,7 +105,16 @@ export function RegistrationForm() {
   })
 
   function onSubmit(values: FormValues) {
-    console.log('Hospital registered:', values)
+    registerHospital.mutate(values, {
+      onSuccess: () => {
+        toast.success('Hospital registered successfully!')
+        form.reset()
+        setStep(0)
+      },
+      onError: (error) => {
+        toast.error(`Registration failed: ${error.message}`)
+      },
+    })
   }
 
   const next = async () => {
@@ -481,8 +493,8 @@ export function RegistrationForm() {
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               ) : (
-                <Button type="submit" disabled={form.formState.isSubmitting}>
-                  {form.formState.isSubmitting ? (
+                <Button type="submit" disabled={form.formState.isSubmitting || registerHospital.isPending}>
+                  {form.formState.isSubmitting || registerHospital.isPending ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   ) : (
                     <Check className="mr-2 h-4 w-4" />

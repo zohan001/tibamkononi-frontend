@@ -4,28 +4,51 @@ import { useParams } from 'next/navigation';
 import { HospitalSidebar } from '@/components/layout/hospital-sidebar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Activity, Bed, Users, AlertTriangle } from 'lucide-react';
+import { Activity, Bed, Users, AlertTriangle, Loader2 } from 'lucide-react';
 import { GemmaBadge } from '@/components/shared/gemma-badge';
+import { useHospital } from '@/hooks/use-hospitals';
+import { usePatients } from '@/hooks/use-patients';
+import { useInventory } from '@/hooks/use-inventory';
+import { useStaffAttendance } from '@/hooks/use-staff';
 
 export default function HospitalDashboardPage() {
   const params = useParams();
   const slug = params.hospitalSlug as string;
 
-  const stats = [
-    { label: "Today's Patients", value: '87', icon: Activity, color: 'text-blue-500' },
-    { label: 'Beds Available', value: '12', icon: Bed, color: 'text-green-500' },
-    { label: 'Staff Present', value: '28/32', icon: Users, color: 'text-purple-500' },
-    { label: 'Stock Warnings', value: '3', icon: AlertTriangle, color: 'text-yellow-500' },
-  ];
+  const { data: hospital, isLoading: hospitalLoading } = useHospital(slug);
+  const { data: patients, isLoading: patientsLoading } = usePatients(slug);
+  const { data: inventory, isLoading: inventoryLoading } = useInventory(slug);
+  const { data: staffAttendance, isLoading: staffLoading } = useStaffAttendance(slug);
 
-  const criticalAlerts = [
-    'Amoxicillin stock-out in 8 hours',
-    'Maternity ward full',
+  const isLoading = hospitalLoading || patientsLoading || inventoryLoading || staffLoading;
+
+  const presentCount = (staffAttendance || []).filter((s) => s.status === 'present').length;
+  const totalStaff = staffAttendance?.length || 0;
+  const stockWarnings = (inventory || []).filter((i) => i.status === 'critical' || i.status === 'warning').length;
+  const bedsAvailable = (hospital?.buildings || []).flatMap((b) => b.wards).reduce((sum, w) => sum + (w.bedCount - w.bedsOccupied), 0);
+  const criticalAlerts = (inventory || []).filter((i) => i.status === 'critical').map((i) => `${i.name} stock-out in ${i.daysRemaining} days`);
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-[calc(100vh-200px)]">
+        <HospitalSidebar hospitalSlug={slug} hospitalName={slug.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())} />
+        <div className="flex-1 p-6 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+        </div>
+      </div>
+    );
+  }
+
+  const stats = [
+    { label: "Today's Patients", value: String((patients || []).length), icon: Activity, color: 'text-blue-500' },
+    { label: 'Beds Available', value: String(bedsAvailable), icon: Bed, color: 'text-green-500' },
+    { label: 'Staff Present', value: `${presentCount}/${totalStaff}`, icon: Users, color: 'text-purple-500' },
+    { label: 'Stock Warnings', value: String(stockWarnings), icon: AlertTriangle, color: 'text-yellow-500' },
   ];
 
   return (
     <div className="flex min-h-[calc(100vh-200px)]">
-      <HospitalSidebar hospitalSlug={slug} hospitalName={slug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())} />
+      <HospitalSidebar hospitalSlug={slug} hospitalName={hospital?.name || slug.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())} />
       <div className="flex-1 p-6">
         {/* Alert Banner */}
         {criticalAlerts.length > 0 && (
@@ -70,21 +93,18 @@ export default function HospitalDashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {[
-                  { name: 'Fatuma Juma', age: 34, diagnosis: 'Malaria' },
-                  { name: 'Ali Hassan', age: 12, diagnosis: 'Typhoid' },
-                  { name: 'Mwende Kaingu', age: 28, diagnosis: 'Prenatal' },
-                  { name: 'John Ochieng', age: 45, diagnosis: 'Hypertension' },
-                  { name: 'Amina Bakari', age: 8, diagnosis: 'URTI' },
-                ].map((patient, i) => (
-                  <div key={i} className="flex items-center justify-between p-2 hover:bg-slate-50 rounded">
+                {(patients || []).slice(0, 5).map((patient) => (
+                  <div key={patient.id} className="flex items-center justify-between p-2 hover:bg-slate-50 rounded">
                     <div>
-                      <p className="font-medium text-sm">{patient.name}</p>
+                      <p className="font-medium text-sm">{patient.fullName}</p>
                       <p className="text-xs text-slate-500">Age {patient.age}</p>
                     </div>
-                    <Badge variant="secondary">{patient.diagnosis}</Badge>
+                    <Badge variant="secondary">{patient.gender}</Badge>
                   </div>
                 ))}
+                {(!patients || patients.length === 0) && (
+                  <p className="text-sm text-slate-500 text-center py-4">No patients registered yet</p>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -95,21 +115,20 @@ export default function HospitalDashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {[
-                  { name: 'Amoxicillin Paediatric', stock: 12, status: 'critical' },
-                  { name: 'ACT Malaria', stock: 144, status: 'warning' },
-                  { name: 'Paracetamol', stock: 2500, status: 'ok' },
-                ].map((item, i) => (
-                  <div key={i} className="flex items-center justify-between p-2 hover:bg-slate-50 rounded">
+                {(inventory || []).slice(0, 5).map((item) => (
+                  <div key={item.id} className="flex items-center justify-between p-2 hover:bg-slate-50 rounded">
                     <div>
                       <p className="font-medium text-sm">{item.name}</p>
-                      <p className="text-xs text-slate-500">{item.stock} units left</p>
+                      <p className="text-xs text-slate-500">{item.currentStock} {item.unit} left</p>
                     </div>
                     <Badge className={item.status === 'critical' ? 'bg-red-100 text-red-700' : item.status === 'warning' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'}>
                       {item.status}
                     </Badge>
                   </div>
                 ))}
+                {(!inventory || inventory.length === 0) && (
+                  <p className="text-sm text-slate-500 text-center py-4">No inventory items</p>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -128,7 +147,9 @@ export default function HospitalDashboardPage() {
               </div>
             </div>
             <p className="text-sm text-slate-700">
-              Today you treated <strong>87 patients</strong>. 3 stock warnings detected. Amoxicillin Paediatric critically low — restocking recommended within 8 hours. Maternity ward at capacity. Staff attendance at 87.5%.
+              Today you treated <strong>{(patients || []).length} patients</strong>. {stockWarnings} stock warnings detected.
+              {criticalAlerts.length > 0 && ` ${criticalAlerts[0]}.`}
+              Staff attendance at {totalStaff > 0 ? Math.round((presentCount / totalStaff) * 100) : 0}%.
             </p>
           </CardContent>
         </Card>

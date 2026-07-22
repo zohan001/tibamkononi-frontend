@@ -4,55 +4,15 @@ import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Megaphone, Pin, AlertTriangle, Package, DollarSign, ClipboardCheck } from 'lucide-react';
-
-const announcements = [
-  {
-    id: '1',
-    title: 'Cholera Outbreak Confirmed — Kibarani Area',
-    body: 'All hospitals: activate isolation protocols. Expect increased patient load from Kibarani area.',
-    type: 'alert',
-    severity: 'critical',
-    pinned: true,
-    author: 'Dr. Salim Omar',
-    authorRole: 'County Health Director',
-    date: 'July 20, 2026',
-  },
-  {
-    id: '2',
-    title: 'Maternal Health Supplies — Q3 Allocation',
-    body: 'The following hospitals will receive maternal health supplies as part of Q3 allocation...',
-    type: 'medicine',
-    severity: 'info',
-    pinned: false,
-    author: 'Dr. Salim Omar',
-    authorRole: 'County Health Director',
-    date: 'Today, 10:00 AM',
-    allocations: [
-      { hospital: 'Coast General', amount: 'KSh 3.2M' },
-      { hospital: 'Mama Ngina', amount: 'KSh 2.8M' },
-      { hospital: 'Port Reitz', amount: 'KSh 2.5M' },
-    ],
-  },
-  {
-    id: '3',
-    title: 'Q3 Facility Reviews — August 10-14',
-    body: 'Scheduled facility inspections for Q3. Please ensure all documentation is up to date.',
-    type: 'inspection',
-    severity: 'warning',
-    pinned: false,
-    author: 'County Inspectorate',
-    authorRole: 'Quality Assurance',
-    date: 'July 18, 2026',
-    hospitals: ['Likoni PHC', 'Mama Ngina Hospital', 'Coast General Hospital'],
-  },
-];
+import { Megaphone, Pin, AlertTriangle, Package, DollarSign, ClipboardCheck, Loader2 } from 'lucide-react';
+import { useAnnouncements } from '@/hooks/use-announcements';
 
 const typeIcons: Record<string, React.ReactNode> = {
   alert: <AlertTriangle className="h-4 w-4" />,
   medicine: <Package className="h-4 w-4" />,
   funding: <DollarSign className="h-4 w-4" />,
   inspection: <ClipboardCheck className="h-4 w-4" />,
+  general: <Megaphone className="h-4 w-4" />,
 };
 
 const severityStyles: Record<string, string> = {
@@ -63,10 +23,33 @@ const severityStyles: Record<string, string> = {
 
 export default function AnnouncementsPage() {
   const [activeTab, setActiveTab] = useState('all');
+  const { data: announcements, isLoading, error } = useAnnouncements();
 
   const filtered = activeTab === 'all'
-    ? announcements
-    : announcements.filter((a) => a.type === activeTab);
+    ? (announcements || [])
+    : (announcements || []).filter((a) => a.type === activeTab);
+
+  if (isLoading) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        <div className="text-center py-16">
+          <Loader2 className="h-12 w-12 animate-spin text-slate-400 mx-auto mb-4" />
+          <p className="text-lg text-slate-600">Loading announcements...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        <div className="text-center py-16">
+          <p className="text-lg text-red-600">Failed to load announcements</p>
+          <p className="text-sm text-slate-500 mt-1">{error.message}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
@@ -102,30 +85,19 @@ export default function AnnouncementsPage() {
                     </Badge>
                   )}
                 </div>
-                <span className="text-sm text-slate-500">{announcement.date}</span>
+                <span className="text-sm text-slate-500">{new Date(announcement.createdAt).toLocaleDateString()}</span>
               </div>
               <h3 className="text-lg font-semibold text-slate-900 mb-2">{announcement.title}</h3>
               <p className="text-slate-600 mb-3">{announcement.body}</p>
 
-              {announcement.allocations && (
+              {announcement.targetedHospitals && announcement.targetedHospitals.length > 0 && (
                 <div className="mt-3 p-3 bg-slate-50 rounded-lg">
                   <p className="text-sm font-medium text-slate-700 mb-2">Targeted Hospitals:</p>
                   <div className="flex flex-wrap gap-2">
-                    {announcement.allocations.map((a) => (
-                      <Badge key={a.hospital} variant="secondary">
-                        {a.hospital} — {a.amount}
+                    {announcement.targetedHospitals.map((h) => (
+                      <Badge key={h.name} variant="secondary">
+                        {h.name}{h.allocation ? ` — ${h.allocation}` : ''}
                       </Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {announcement.hospitals && (
-                <div className="mt-3 p-3 bg-slate-50 rounded-lg">
-                  <p className="text-sm font-medium text-slate-700 mb-2">Inspection Targets:</p>
-                  <div className="flex flex-wrap gap-2">
-                    {announcement.hospitals.map((h) => (
-                      <Badge key={h} variant="secondary">{h}</Badge>
                     ))}
                   </div>
                 </div>
@@ -137,6 +109,12 @@ export default function AnnouncementsPage() {
             </CardContent>
           </Card>
         ))}
+        {filtered.length === 0 && (
+          <div className="text-center py-12">
+            <Megaphone className="h-12 w-12 mx-auto text-slate-300 mb-4" />
+            <p className="text-slate-500">No announcements found</p>
+          </div>
+        )}
       </div>
     </div>
   );

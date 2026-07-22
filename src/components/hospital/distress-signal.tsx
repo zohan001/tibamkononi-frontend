@@ -30,13 +30,11 @@ interface CriticalItem {
   currentStock: number
 }
 
-const criticalItems: CriticalItem[] = [
-  { id: '1', name: 'Amoxicillin 500mg', currentStock: 12 },
-  { id: '2', name: 'Paracetamol 500mg', currentStock: 8 },
-  { id: '3', name: 'Oxygen Cylinders', currentStock: 3 },
-]
+interface DistressSignalProps {
+  criticalItems?: CriticalItem[]
+}
 
-export function DistressSignal() {
+export function DistressSignal({ criticalItems = [] }: DistressSignalProps) {
   const [reason, setReason] = useState('')
   const [urgency, setUrgency] = useState('')
   const [notes, setNotes] = useState('')

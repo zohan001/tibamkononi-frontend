@@ -4,6 +4,7 @@ import { MainHeader } from "@/components/layout/main-header";
 import { MainFooter } from "@/components/layout/main-footer";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { Toaster } from "@/components/ui/sonner";
+import { Providers } from "@/components/providers";
 
 export const metadata: Metadata = {
   title: "Tibamkononi — Connecting Mombasa's Healthcare",
@@ -27,11 +28,13 @@ export default function RootLayout({
   return (
     <html lang="en" className="font-sans">
       <body className="antialiased min-h-screen bg-background flex flex-col">
-        <MainHeader />
-        <main className="flex-1">{children}</main>
-        <MainFooter />
-        <MobileNav />
-        <Toaster />
+        <Providers>
+          <MainHeader />
+          <main className="flex-1">{children}</main>
+          <MainFooter />
+          <MobileNav />
+          <Toaster />
+        </Providers>
       </body>
     </html>
   );

@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
+import type { WatchlistItem } from '@/types/announcement';
 
 interface CountyDashboard {
   hospitalsActive: number;
@@ -34,7 +35,7 @@ export function useCountyHospitals() {
 }
 
 export function useCountyWatchlist() {
-  return useQuery({
+  return useQuery<WatchlistItem[]>({
     queryKey: ['county', 'watchlist'],
     queryFn: () => api.get('/county/watchlist'),
     staleTime: 30000,

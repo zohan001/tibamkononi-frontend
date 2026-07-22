@@ -11,36 +11,39 @@ import { EmergencyAnalysis } from '@/components/emergency/emergency-analysis';
 import { HospitalSelector } from '@/components/emergency/hospital-selector';
 import { GemmaBadge } from '@/components/shared/gemma-badge';
 import { useGeolocation } from '@/hooks/use-geolocation';
+import { useAnalyzeEmergency } from '@/hooks/use-emergency';
 import { AlertTriangle, Loader2 } from 'lucide-react';
-
-const mockHospitals = [
-  { hospitalSlug: 'coast-general', name: 'Coast General Hospital', distance: 3.2, eta: '7 min', bedsAvailable: 4, hasICU: true, hasAmbulance: true },
-  { hospitalSlug: 'aga-khan', name: 'Aga Khan Hospital', distance: 4.8, eta: '12 min', bedsAvailable: 3, hasICU: true, hasAmbulance: true },
-  { hospitalSlug: 'mama-ngina', name: 'Mama Ngina Hospital', distance: 2.1, eta: '5 min', bedsAvailable: 6, hasICU: false, hasAmbulance: true },
-];
-
-const mockAnalysis = {
-  type: 'Road Traffic Accident',
-  severity: 'severe' as const,
-  description: 'Multiple vehicle collision with visible injuries',
-  casualties: '2-3 visible casualties',
-  hazards: 'Fuel leakage suspected',
-  recommendedResponse: 'Activate trauma team, prepare blood bank',
-};
+import { toast } from 'sonner';
 
 export default function EmergencyPage() {
   const [inputType, setInputType] = useState<'camera' | 'voice' | 'text' | null>(null);
   const [textDescription, setTextDescription] = useState('');
   const [showResult, setShowResult] = useState(false);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const { latitude, longitude } = useGeolocation();
+  const analyzeEmergency = useAnalyzeEmergency();
 
   const handleAnalyze = () => {
-    setIsAnalyzing(true);
-    setTimeout(() => {
-      setIsAnalyzing(false);
-      setShowResult(true);
-    }, 2000);
+    if (!latitude || !longitude) {
+      toast.error('Location is required. Please enable location access.');
+      return;
+    }
+
+    const payload = {
+      input_type: inputType as 'text' | 'camera' | 'voice',
+      latitude,
+      longitude,
+      text: textDescription || undefined,
+      language: 'en',
+    };
+
+    analyzeEmergency.mutate(payload, {
+      onSuccess: () => {
+        setShowResult(true);
+      },
+      onError: (error) => {
+        toast.error(`Analysis failed: ${error.message}`);
+      },
+    });
   };
 
   return (
@@ -134,9 +137,9 @@ export default function EmergencyPage() {
               size="lg"
               className="w-full bg-red-600 hover:bg-red-700 text-white"
               onClick={handleAnalyze}
-              disabled={isAnalyzing}
+              disabled={analyzeEmergency.isPending}
             >
-              {isAnalyzing ? (
+              {analyzeEmergency.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                   Analyzing Emergency...
@@ -153,9 +156,9 @@ export default function EmergencyPage() {
       ) : (
         <>
           {/* Results */}
-          <EmergencyAnalysis analysis={mockAnalysis} />
+          {analyzeEmergency.data && <EmergencyAnalysis analysis={analyzeEmergency.data} />}
           <div className="mt-6">
-            <HospitalSelector hospitals={mockHospitals} onSelectionChange={(selected) => console.log('Selected:', selected)} />
+            <HospitalSelector hospitals={[]} onSelectionChange={(selected) => console.log('Selected:', selected)} />
           </div>
           <Button className="mt-6 w-full bg-red-600 hover:bg-red-700 text-white" size="lg">
             <Send className="mr-2 h-4 w-4" />

@@ -14,6 +14,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useCreateAnnouncement } from '@/hooks/use-announcements';
+import { toast } from 'sonner';
+import { Loader2 } from 'lucide-react';
 
 interface TargetedHospital {
   name: string;
@@ -50,9 +53,9 @@ const severityOptions = [
 
 export function AnnouncementForm({
   hospitals = [],
-  onSubmit,
 }: AnnouncementFormProps) {
-  const { register, handleSubmit, setValue, watch } =
+  const createAnnouncement = useCreateAnnouncement();
+  const { register, handleSubmit, setValue, watch, reset } =
     useForm<AnnouncementFormValues>({
       defaultValues: {
         title: '',
@@ -68,7 +71,15 @@ export function AnnouncementForm({
   const pinned = watch('pinned');
 
   const handleFormSubmit = (data: AnnouncementFormValues) => {
-    onSubmit?.(data);
+    createAnnouncement.mutate(data, {
+      onSuccess: () => {
+        toast.success('Announcement created successfully!');
+        reset();
+      },
+      onError: (error) => {
+        toast.error(`Failed to create announcement: ${error.message}`);
+      },
+    });
   };
 
   return (
@@ -188,8 +199,12 @@ export function AnnouncementForm({
             Pin this announcement
           </label>
 
-          <Button type="submit" className="w-full">
-            <Send className="h-4 w-4" />
+          <Button type="submit" className="w-full" disabled={createAnnouncement.isPending}>
+            {createAnnouncement.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Send className="h-4 w-4" />
+            )}
             Send Announcement
           </Button>
         </form>

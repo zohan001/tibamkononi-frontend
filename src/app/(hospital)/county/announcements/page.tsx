@@ -3,7 +3,8 @@
 import dynamic from 'next/dynamic';
 import { CountySidebar } from '@/components/layout/county-sidebar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Megaphone } from 'lucide-react';
+import { Megaphone, Loader2 } from 'lucide-react';
+import { useAnnouncements } from '@/hooks/use-announcements';
 
 const AnnouncementForm = dynamic(
   () => import('@/components/county/announcement-form').then((m) => m.AnnouncementForm),
@@ -14,15 +15,23 @@ const FundingAllocation = dynamic(
   { ssr: false }
 );
 
-const mockAllocations = [
-  { hospitalName: 'Coast General Hospital', amount: 3200000, percentage: 26.7 },
-  { hospitalName: 'Mama Ngina Hospital', amount: 2800000, percentage: 23.3 },
-  { hospitalName: 'Port Reitz Hospital', amount: 2500000, percentage: 20.8 },
-  { hospitalName: 'Likoni PHC', amount: 1500000, percentage: 12.5 },
-  { hospitalName: 'Changamwe District', amount: 2000000, percentage: 16.7 },
-];
-
 export default function CountyAnnouncementsPage() {
+  const { data: announcements, isLoading } = useAnnouncements();
+
+  const fundingAnnouncements = (announcements || []).filter((a) => a.type === 'funding');
+  const allocations = fundingAnnouncements.flatMap((a) =>
+    (a.targetedHospitals || []).map((h) => ({
+      hospitalName: h.name,
+      amount: h.allocation ? parseInt(h.allocation.replace(/[^0-9]/g, '')) || 0 : 0,
+      percentage: 0,
+    }))
+  );
+  const totalFund = allocations.reduce((sum, a) => sum + a.amount, 0);
+  const allocsWithPct = allocations.map((a) => ({
+    ...a,
+    percentage: totalFund > 0 ? Math.round((a.amount / totalFund) * 1000) / 10 : 0,
+  }));
+
   return (
     <div className="flex min-h-[calc(100vh-200px)]">
       <CountySidebar />
@@ -43,10 +52,16 @@ export default function CountyAnnouncementsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>This Week&apos;s Funding: KSh 12,000,000</CardTitle>
+            <CardTitle>
+              {isLoading ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                `This Week's Funding: KSh ${(totalFund || 12000000).toLocaleString()}`
+              )}
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <FundingAllocation allocations={mockAllocations} totalFund={12000000} />
+            <FundingAllocation allocations={allocsWithPct.length > 0 ? allocsWithPct : []} totalFund={totalFund || 12000000} />
           </CardContent>
         </Card>
       </div>
