@@ -13,7 +13,7 @@ export default function NewPatientPage() {
       <HospitalSidebar hospitalSlug={slug} hospitalName={slug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())} />
       <div className="flex-1 p-6">
         <h1 className="text-2xl font-bold mb-6">Register New Patient</h1>
-        <PatientForm hospitalSlug={slug} />
+        <PatientForm onSubmit={(patient) => { console.log('New patient:', patient); }} />
       </div>
     </div>
   );

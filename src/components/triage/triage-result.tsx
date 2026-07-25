@@ -18,10 +18,17 @@ import { TRIAGE_LEVELS } from '@/lib/constants';
 import { HospitalRecommendation } from './hospital-recommendation';
 
 interface TriageResultProps {
-  result: TriageResult;
+  result?: TriageResult;
 }
 
 export function TriageResult({ result }: TriageResultProps) {
+  if (!result) {
+    return (
+      <div className="text-center py-8 text-slate-500">
+        <p>Submit symptoms to see AI assessment results.</p>
+      </div>
+    );
+  }
   const levelConfig = TRIAGE_LEVELS[result.level];
 
   return (

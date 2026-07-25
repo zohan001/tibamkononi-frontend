@@ -10,6 +10,15 @@ import { useHospital } from '@/hooks/use-hospitals';
 import { usePatients } from '@/hooks/use-patients';
 import { useInventory } from '@/hooks/use-inventory';
 import { useStaffAttendance } from '@/hooks/use-staff';
+import { AIInsightsPanel } from '@/components/hospital/ai-insights-panel';
+import { LiveActivity } from '@/components/hospital/live-activity';
+import { PerformanceScore } from '@/components/hospital/performance-score';
+import { HospitalAICommandCenter } from '@/components/hospital/hospital-ai-command-center';
+import { QuickActions } from '@/components/hospital/quick-actions';
+import { SystemStatus } from '@/components/hospital/system-status';
+import { PatientRiskMonitor } from '@/components/hospital/patient-risk-monitor';
+import { BedManagementCenter } from '@/components/hospital/bed-management-center';
+import { DoctorWorkloadMonitor } from '@/components/hospital/doctor-workload-monitor';
 
 export default function HospitalDashboardPage() {
   const params = useParams();
@@ -50,6 +59,7 @@ export default function HospitalDashboardPage() {
     <div className="flex min-h-[calc(100vh-200px)]">
       <HospitalSidebar hospitalSlug={slug} hospitalName={hospital?.name || slug.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())} />
       <div className="flex-1 p-6">
+        <HospitalAICommandCenter />
         {/* Alert Banner */}
         {criticalAlerts.length > 0 && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
@@ -85,6 +95,24 @@ export default function HospitalDashboardPage() {
           ))}
         </div>
 
+        {/* AI Insights */}
+<div className="grid xl:grid-cols-3 gap-6 mb-6">
+
+  <div className="xl:col-span-2">
+    <AIInsightsPanel />
+    <HospitalAICommandCenter />
+    <PatientRiskMonitor />
+    <BedManagementCenter />
+    <DoctorWorkloadMonitor />
+  </div>
+
+  <PerformanceScore />
+
+</div>
+
+<div className="mb-8">
+  <QuickActions hospitalSlug={slug} />
+</div>
         {/* Recent Patients & Stock Alerts */}
         <div className="grid lg:grid-cols-2 gap-6">
           <Card>
@@ -133,6 +161,14 @@ export default function HospitalDashboardPage() {
             </CardContent>
           </Card>
         </div>
+
+        <div className="grid lg:grid-cols-2 gap-6 mt-8">
+
+    <LiveActivity />
+
+    <SystemStatus />
+
+</div>
 
         {/* Gemma Daily Summary */}
         <Card className="mt-6 border-blue-100 bg-blue-50/50">

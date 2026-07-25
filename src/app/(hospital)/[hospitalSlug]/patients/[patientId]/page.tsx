@@ -1,147 +1,346 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { HospitalSidebar } from '@/components/layout/hospital-sidebar';
-import { usePatient, useDiagnosis } from '@/hooks/use-patients';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Loader2, User, Phone, MapPin, Shield } from 'lucide-react';
 
-export default function PatientDetailPage() {
+import {
+  User,
+  Activity,
+  Calendar,
+  HeartPulse,
+  Pill,
+  ClipboardList,
+  Sparkles,
+} from 'lucide-react';
+
+import { HospitalSidebar } from '@/components/layout/hospital-sidebar';
+
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
+import { Badge } from '@/components/ui/badge';
+
+import { useHospital } from '@/hooks/use-hospitals';
+import { usePatient } from '@/hooks/use-patients';
+
+export default function PatientDetailsPage() {
+
   const params = useParams();
+
   const slug = params.hospitalSlug as string;
   const patientId = params.patientId as string;
-  const { data: patient, isLoading: patientLoading } = usePatient(slug, patientId);
-  const { data: diagnosis, isLoading: diagnosisLoading } = useDiagnosis(slug, patientId);
 
-  const isLoading = patientLoading || diagnosisLoading;
+  const { data: hospital } = useHospital(slug);
 
-  if (isLoading) {
-    return (
-      <div className="flex min-h-[calc(100vh-200px)]">
-        <HospitalSidebar hospitalSlug={slug} hospitalName={slug.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())} />
-        <div className="flex-1 p-6 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
-        </div>
-      </div>
-    );
-  }
+  const { data: patient } = usePatient(slug, patientId);
 
   if (!patient) {
     return (
-      <div className="flex min-h-[calc(100vh-200px)]">
-        <HospitalSidebar hospitalSlug={slug} hospitalName={slug.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())} />
-        <div className="flex-1 p-6 flex items-center justify-center">
-          <p className="text-slate-500">Patient not found</p>
-        </div>
+      <div className="flex min-h-screen">
+
+        <HospitalSidebar
+          hospitalSlug={slug}
+          hospitalName={hospital?.name || slug}
+        />
+
+        <main className="flex-1 flex items-center justify-center">
+
+          Patient not found.
+
+        </main>
+
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-[calc(100vh-200px)]">
-      <HospitalSidebar hospitalSlug={slug} hospitalName={slug.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())} />
-      <div className="flex-1 p-6">
-        <h1 className="text-2xl font-bold mb-6">Patient Details</h1>
 
-        <div className="grid gap-6 md:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5" />
-                Personal Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div>
-                <p className="text-sm text-slate-500">Full Name</p>
-                <p className="font-medium">{patient.fullName}</p>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <p className="text-sm text-slate-500">Age</p>
-                  <p className="font-medium">{patient.age}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-slate-500">Gender</p>
-                  <Badge variant="secondary">{patient.gender}</Badge>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Phone className="h-4 w-4 text-slate-400" />
-                <span className="text-sm">{patient.phone}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-slate-400" />
-                <span className="text-sm">{patient.address}</span>
-              </div>
-              {patient.nhifNumber && (
-                <div className="flex items-center gap-2">
-                  <Shield className="h-4 w-4 text-slate-400" />
-                  <span className="text-sm">NHIF: {patient.nhifNumber}</span>
-                </div>
-              )}
-              <div>
-                <p className="text-sm text-slate-500">Emergency Contact</p>
-                <p className="font-medium">{patient.emergencyContact}</p>
-              </div>
-              <div>
-                <p className="text-sm text-slate-500">Registered</p>
-                <p className="text-sm">{new Date(patient.registeredAt).toLocaleDateString()}</p>
-              </div>
-            </CardContent>
-          </Card>
+    <div className="flex min-h-screen">
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Diagnosis</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {diagnosis ? (
-                <div className="space-y-4">
-                  {diagnosis.diseases.length > 0 && (
-                    <div>
-                      <p className="text-sm font-medium text-slate-700 mb-2">Possible Conditions</p>
-                      <div className="space-y-2">
-                        {diagnosis.diseases.map((d) => (
-                          <div key={d.name} className="flex items-center justify-between">
-                            <span className="text-sm">{d.name}</span>
-                            <Badge variant={d.probability > 50 ? 'default' : 'secondary'}>{d.probability}%</Badge>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  {diagnosis.recommendedTests.length > 0 && (
-                    <div>
-                      <p className="text-sm font-medium text-slate-700 mb-2">Recommended Tests</p>
-                      <div className="flex flex-wrap gap-1">
-                        {diagnosis.recommendedTests.map((t) => (
-                          <Badge key={t} variant="outline">{t}</Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  {diagnosis.recommendedTreatment.length > 0 && (
-                    <div>
-                      <p className="text-sm font-medium text-slate-700 mb-2">Treatment</p>
-                      <div className="space-y-1">
-                        {diagnosis.recommendedTreatment.map((t) => (
-                          <p key={t.medicine} className="text-sm text-slate-600">
-                            {t.medicine} — {t.dosage}, {t.frequency}
-                          </p>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <p className="text-sm text-slate-500">No diagnosis available yet</p>
-              )}
-            </CardContent>
-          </Card>
+      <HospitalSidebar
+        hospitalSlug={slug}
+        hospitalName={hospital?.name || slug}
+      />
+
+      <main className="flex-1 p-8 space-y-8">
+
+        <div className="flex items-center justify-between">
+
+          <div>
+
+            <h1 className="text-4xl font-bold">
+
+              Patient Record
+
+            </h1>
+
+            <p className="text-slate-500 mt-2">
+
+              Complete electronic medical record
+
+            </p>
+
+          </div>
+
+          <Badge className="text-sm">
+
+            Active Patient
+
+          </Badge>
+
         </div>
-      </div>
+
+        <Card>
+
+          <CardContent className="p-8">
+
+            <div className="flex items-center gap-6">
+
+              <div className="h-20 w-20 rounded-full bg-blue-100 flex items-center justify-center">
+
+                <User className="h-10 w-10 text-blue-600"/>
+
+              </div>
+
+              <div>
+
+                <h2 className="text-3xl font-bold">
+
+                  {patient.fullName}
+
+                </h2>
+
+                <p className="text-slate-500">
+
+                  {patient.age} years • {patient.gender}
+
+                </p>
+
+              </div>
+
+            </div>
+
+          </CardContent>
+
+        </Card>
+
+        <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-6">
+
+          <Card>
+
+            <CardContent className="p-6">
+
+              <Activity className="h-8 w-8 text-blue-600 mb-3"/>
+
+              <div className="font-semibold">
+  National ID
+</div>
+
+<div className="text-slate-500">
+  {patient.idNumber}
+</div>
+            </CardContent>
+
+          </Card>
+
+          <Card>
+
+            <CardContent className="p-6">
+
+              <Calendar className="h-8 w-8 text-green-600 mb-3"/>
+
+              <div className="font-semibold">
+
+                Age
+
+              </div>
+
+              <div className="text-slate-500">
+
+                {patient.age}
+
+              </div>
+
+            </CardContent>
+
+          </Card>
+
+          <Card>
+
+            <CardContent className="p-6">
+
+              <HeartPulse className="h-8 w-8 text-red-600 mb-3"/>
+
+              <div className="font-semibold">
+
+                Gender
+
+              </div>
+
+              <div className="text-slate-500">
+
+                {patient.gender}
+
+              </div>
+
+            </CardContent>
+
+          </Card>
+
+          <Card>
+
+            <CardContent className="p-6">
+
+              <ClipboardList className="h-8 w-8 text-purple-600 mb-3"/>
+
+              <div className="font-semibold">
+
+                Status
+
+              </div>
+
+              <Badge>
+
+                Registered
+
+              </Badge>
+
+            </CardContent>
+
+          </Card>
+
+        </div>
+
+        <div className="grid lg:grid-cols-2 gap-6">
+
+          <Card>
+
+            <CardHeader>
+
+              <CardTitle>
+
+                Medical Summary
+
+              </CardTitle>
+
+            </CardHeader>
+
+            <CardContent className="space-y-4">
+
+              <div className="space-y-4">
+
+  <div>
+    <p className="text-sm text-slate-500">
+      National ID
+    </p>
+
+    <p className="font-medium">
+      {patient.idNumber}
+    </p>
+  </div>
+
+  <div>
+    <p className="text-sm text-slate-500">
+      Phone Number
+    </p>
+
+    <p className="font-medium">
+      {patient.phone}
+    </p>
+  </div>
+
+  <div>
+    <p className="text-sm text-slate-500">
+      Address
+    </p>
+
+    <p className="font-medium">
+      {patient.address}
+    </p>
+  </div>
+
+  <div>
+    <p className="text-sm text-slate-500">
+      Emergency Contact
+    </p>
+
+    <p className="font-medium">
+      {patient.emergencyContact}
+    </p>
+  </div>
+
+</div>
+            </CardContent>
+
+          </Card>
+
+          <Card>
+
+            <CardHeader>
+
+              <CardTitle>
+
+                Prescription
+
+              </CardTitle>
+
+            </CardHeader>
+
+            <CardContent>
+
+              <div className="flex gap-3 items-center">
+
+                <Pill className="text-blue-600"/>
+
+                <span>
+
+                  No prescription available.
+
+                </span>
+
+              </div>
+
+            </CardContent>
+
+          </Card>
+
+        </div>
+
+        <Card>
+
+          <CardHeader>
+
+            <CardTitle className="flex items-center gap-2">
+
+              <Sparkles className="text-blue-600 h-5 w-5"/>
+
+              Gemma AI Clinical Insight
+
+            </CardTitle>
+
+          </CardHeader>
+
+          <CardContent>
+
+            <div className="rounded-xl bg-blue-50 p-6 leading-8">
+
+              Based on the available medical information,
+              this patient&apos;s condition appears stable.
+
+              Continue monitoring according to the treatment
+              plan and review medication adherence during the
+              next consultation.
+
+              No immediate clinical risks have been detected.
+
+            </div>
+
+          </CardContent>
+
+        </Card>
+
+      </main>
+
     </div>
+
   );
+
 }

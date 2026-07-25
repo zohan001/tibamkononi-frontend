@@ -1,153 +1,268 @@
-'use client'
+'use client';
 
-import { useState, useMemo } from 'react'
-import { Search, Filter, Package } from 'lucide-react'
+import { useMemo, useState } from 'react';
 
-import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+  Search,
+  Package,
+  AlertTriangle,
+  CheckCircle2,
+  Clock3,
+} from 'lucide-react';
+
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
 interface InventoryItem {
-  id: string
-  name: string
-  category?: string
-  currentStock: number
-  dailyUsage: number
-  daysRemaining: number
-  status?: string
-  supplier: string
-  lastRestock: string
-  unit?: string
-  minimumStock?: number
+  id: string;
+  name: string;
+  category: string;
+  currentStock: number;
+  unit: string;
+  dailyUsage: number;
+  daysRemaining: number;
+  status: 'critical' | 'warning' | 'ok';
+  supplier: string;
 }
 
-const severityBadge = (days: number) => {
-  if (days <= 3) return <Badge variant="destructive">Critical</Badge>
-  if (days <= 7) return <Badge className="bg-amber-500 hover:bg-amber-600">Low</Badge>
-  return <Badge className="bg-emerald-500 hover:bg-emerald-600">OK</Badge>
+interface InventoryTableProps {
+  inventory: InventoryItem[];
 }
 
 export function InventoryTable({
-  items,
-  filteredBy,
-}: {
-  items: InventoryItem[]
-  filteredBy?: string
-}) {
-  const [search, setSearch] = useState('')
-  const [severityFilter, setSeverityFilter] = useState('all')
+  inventory,
+}: InventoryTableProps) {
+
+  const [search, setSearch] = useState('');
 
   const filtered = useMemo(() => {
-    let result = items
 
-    if (filteredBy) {
-      result = result.filter((i) => i.supplier === filteredBy)
+    if (!search.trim()) return inventory;
+
+    const q = search.toLowerCase();
+
+    return inventory.filter((item) =>
+      item.name.toLowerCase().includes(q) ||
+      item.category.toLowerCase().includes(q)
+    );
+
+  }, [inventory, search]);
+
+  const statusBadge = (status: InventoryItem['status']) => {
+
+    switch (status) {
+
+      case 'critical':
+        return (
+          <Badge className="bg-red-100 text-red-700">
+            Critical
+          </Badge>
+        );
+
+      case 'warning':
+        return (
+          <Badge className="bg-yellow-100 text-yellow-700">
+            Warning
+          </Badge>
+        );
+
+      default:
+        return (
+          <Badge className="bg-green-100 text-green-700">
+            Healthy
+          </Badge>
+        );
     }
 
-    if (search) {
-      const q = search.toLowerCase()
-      result = result.filter(
-        (i) =>
-          i.name.toLowerCase().includes(q) || i.supplier.toLowerCase().includes(q)
-      )
-    }
-
-    if (severityFilter !== 'all') {
-      result = result.filter((i) => {
-        if (severityFilter === 'critical') return i.daysRemaining <= 3
-        if (severityFilter === 'low') return i.daysRemaining > 3 && i.daysRemaining <= 7
-        return i.daysRemaining > 7
-      })
-    }
-
-    return result
-  }, [items, search, severityFilter, filteredBy])
+  };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Package className="h-5 w-5" />
-          Inventory
-        </CardTitle>
-        <div className="flex flex-col gap-3 sm:flex-row">
-          <div className="relative flex-1">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search medicines or suppliers..."
-              className="pl-8"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-          <Select value={severityFilter} onValueChange={(v) => setSeverityFilter(v ?? '')}>
-            <SelectTrigger className="w-full sm:w-[160px]">
-              <Filter className="mr-2 h-4 w-4" />
-              <SelectValue placeholder="Severity" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All</SelectItem>
-              <SelectItem value="critical">Critical</SelectItem>
-              <SelectItem value="low">Low</SelectItem>
-              <SelectItem value="ok">OK</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </CardHeader>
 
-      <CardContent>
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Medicine</TableHead>
-                <TableHead className="text-right">Current Stock</TableHead>
-                <TableHead className="text-right">Daily Usage</TableHead>
-                <TableHead className="text-right">Days Remaining</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Supplier</TableHead>
-                <TableHead>Last Restock</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filtered.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
-                    No items found.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filtered.map((item) => (
-                  <TableRow key={item.id}>
-                    <TableCell className="font-medium">{item.name}</TableCell>
-                    <TableCell className="text-right">{item.currentStock.toLocaleString()}</TableCell>
-                    <TableCell className="text-right">{item.dailyUsage}</TableCell>
-                    <TableCell className="text-right">{item.daysRemaining}</TableCell>
-                    <TableCell>{severityBadge(item.daysRemaining)}</TableCell>
-                    <TableCell>{item.supplier}</TableCell>
-                    <TableCell>{item.lastRestock}</TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+    <Card className="overflow-hidden">
+
+      <div className="p-6 border-b">
+
+        <div className="relative max-w-sm">
+
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400"/>
+
+          <Input
+            className="pl-10"
+            placeholder="Search inventory..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+
         </div>
-      </CardContent>
+
+      </div>
+
+      <div className="overflow-x-auto">
+
+        <table className="w-full">
+
+          <thead className="bg-slate-100">
+
+            <tr>
+
+              <th className="px-6 py-4 text-left">Medicine</th>
+              <th className="px-6 py-4 text-left">Category</th>
+              <th className="px-6 py-4 text-left">Stock</th>
+              <th className="px-6 py-4 text-left">Usage / Day</th>
+              <th className="px-6 py-4 text-left">Days Left</th>
+              <th className="px-6 py-4 text-left">Status</th>
+              <th className="px-6 py-4 text-right">Action</th>
+
+            </tr>
+
+          </thead>
+
+          <tbody>
+
+            {filtered.map((item) => (
+
+              <tr
+                key={item.id}
+                className="border-t hover:bg-slate-50"
+              >
+
+                <td className="px-6 py-5">
+
+                  <div className="flex items-center gap-3">
+
+                    <div className="rounded-full bg-blue-100 p-2">
+
+                      <Package className="h-5 w-5 text-blue-600"/>
+
+                    </div>
+
+                    <div>
+
+                      <div className="font-semibold">
+
+                        {item.name}
+
+                      </div>
+
+                      <div className="text-xs text-slate-500">
+
+                        {item.supplier}
+
+                      </div>
+
+                    </div>
+
+                  </div>
+
+                </td>
+
+                <td className="px-6 py-5">
+
+                  {item.category}
+
+                </td>
+
+                <td className="px-6 py-5">
+
+                  {item.currentStock} {item.unit}
+
+                </td>
+
+                <td className="px-6 py-5">
+
+                  {item.dailyUsage}
+
+                </td>
+
+                <td className="px-6 py-5">
+
+                  <div className="flex items-center gap-2">
+
+                    <Clock3 className="h-4 w-4 text-slate-500"/>
+
+                    {item.daysRemaining}
+
+                  </div>
+
+                </td>
+
+                <td className="px-6 py-5">
+
+                  {statusBadge(item.status)}
+
+                </td>
+
+                <td className="px-6 py-5 text-right">
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                  >
+
+                    Restock
+
+                  </Button>
+
+                </td>
+
+              </tr>
+
+            ))}
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+      {filtered.length === 0 && (
+
+        <div className="p-12 text-center text-slate-500">
+
+          <Package className="mx-auto mb-3 h-10 w-10 opacity-40"/>
+
+          No inventory items found.
+
+        </div>
+
+      )}
+
+      <div className="border-t bg-slate-50 p-5">
+
+        <div className="flex flex-wrap gap-6 text-sm">
+
+          <div className="flex items-center gap-2">
+
+            <CheckCircle2 className="h-4 w-4 text-green-600"/>
+
+            Healthy inventory
+
+          </div>
+
+          <div className="flex items-center gap-2">
+
+            <AlertTriangle className="h-4 w-4 text-yellow-600"/>
+
+            Warning stock
+
+          </div>
+
+          <div className="flex items-center gap-2">
+
+            <AlertTriangle className="h-4 w-4 text-red-600"/>
+
+            Critical stock
+
+          </div>
+
+        </div>
+
+      </div>
+
     </Card>
-  )
+
+  );
+
 }

@@ -111,7 +111,7 @@ export function CameraCapture({ onCapture }: CameraCaptureProps) {
               Retake
             </Button>
             <Button variant="default" className="bg-green-600 hover:bg-green-700">
-              <Image className="h-4 w-4" aria-hidden="true" />
+              <Image className="h-4 w-4" role="img" aria-label="photo" />
               Use Photo
             </Button>
           </>

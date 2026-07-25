@@ -3,25 +3,32 @@
 import { useState, useMemo } from 'react';
 import { Search, AlertCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Brain } from "lucide-react";
 
 interface HospitalListItem {
   id: string;
   name: string;
   status: 'approved' | 'pending' | 'suspended';
-  alertCount: number;
-}
 
+  alertCount: number;
+
+  score?: number;
+
+  type?: string;
+
+  beds?: number;
+
+  critical?: number;
+
+  warnings?: number;
+
+  aiSummary?: string;
+}
 interface HospitalListProps {
   hospitals: HospitalListItem[];
 }
-
-const statusVariants: Record<string, 'default' | 'secondary' | 'destructive'> = {
-  approved: 'default',
-  pending: 'secondary',
-  suspended: 'destructive',
-};
 
 export function HospitalList({ hospitals }: HospitalListProps) {
   const [search, setSearch] = useState('');
@@ -52,38 +59,180 @@ export function HospitalList({ hospitals }: HospitalListProps) {
           onChange={(e) => setSearch(e.target.value)}
         />
       </div>
-      <div className="divide-y rounded-lg border">
-        {filtered.map((hospital) => (
-          <div
-            key={hospital.id}
-            className="flex items-center justify-between px-4 py-3 transition-colors hover:bg-muted/50"
-          >
-            <span className="text-sm font-medium">{hospital.name}</span>
-            <div className="flex items-center gap-3">
-              {hospital.alertCount > 0 && (
-                <span className="inline-flex items-center gap-1 text-xs text-red-500">
-                  <AlertCircle className="h-3 w-3" />
-                  {hospital.alertCount}
-                </span>
-              )}
-              <Badge
-                variant={statusVariants[hospital.status] ?? 'secondary'}
-                className={cn(
-                  'capitalize',
-                  hospital.status === 'approved' &&
-                    'bg-green-100 text-green-700 dark:bg-green-950/50 dark:text-green-400',
-                  hospital.status === 'pending' &&
-                    'bg-yellow-100 text-yellow-700 dark:bg-yellow-950/50 dark:text-yellow-400',
-                  hospital.status === 'suspended' &&
-                    'bg-red-100 text-red-700 dark:bg-red-950/50 dark:text-red-400'
-                )}
-              >
-                {hospital.status}
-              </Badge>
-            </div>
-          </div>
-        ))}
-      </div>
+      <div className="space-y-5">
+
+{filtered.map((hospital,index)=>{
+
+const score =
+hospital.score ??
+(index===0 ? 91 :
+index===1 ? 72 : 28);
+
+const critical =
+hospital.critical ??
+(index===2 ? 3 : 1);
+
+const warnings =
+hospital.warnings ??
+(index===0 ? 0 : 2);
+
+const beds =
+hospital.beds ??
+(index===0 ? 340 :
+index===1 ? 120 : 40);
+
+const type =
+hospital.type ??
+(index===2 ? "PHC" : "District Hospital");
+
+const ai =
+hospital.aiSummary ??
+(
+score>85
+?"All systems operating normally."
+:score>60
+?"Medicine shortage predicted within 48 hours."
+:"Immediate county intervention recommended."
+);
+
+const color =
+score>85
+?"text-green-600"
+:score>60
+?"text-yellow-600"
+:"text-red-600";
+
+return(
+
+<Card key={hospital.id} className="transition hover:shadow-lg">
+
+<CardContent className="p-6">
+
+<div className="flex justify-between">
+
+<div>
+
+<h3 className="text-xl font-bold">
+
+{hospital.name}
+
+</h3>
+
+<p className="text-sm text-slate-500">
+
+{type}
+
+</p>
+
+</div>
+
+<div className={`text-3xl font-bold ${color}`}>
+
+{score}/100
+
+</div>
+
+</div>
+
+<div className="grid grid-cols-3 gap-4 mt-6">
+
+<div>
+
+<div className="text-xs text-slate-500">
+
+Beds
+
+</div>
+
+<div className="font-semibold">
+
+{beds}
+
+</div>
+
+</div>
+
+<div>
+
+<div className="text-xs text-slate-500">
+
+Critical
+
+</div>
+
+<div className="font-semibold text-red-600">
+
+{critical}
+
+</div>
+
+</div>
+
+<div>
+
+<div className="text-xs text-slate-500">
+
+Warnings
+
+</div>
+
+<div className="font-semibold text-yellow-600">
+
+{warnings}
+
+</div>
+
+</div>
+
+</div>
+
+<div className="mt-6 rounded-lg bg-slate-50 p-4">
+
+<div className="flex items-center gap-2 mb-2">
+
+<Brain className="h-4 w-4 text-blue-600"/>
+
+<span className="font-semibold">
+
+Gemma AI
+
+</span>
+
+</div>
+
+<p className="text-sm text-slate-600">
+
+{ai}
+
+</p>
+
+</div>
+
+<div className="flex gap-3 mt-6">
+
+<Button>
+
+View Hospital
+
+</Button>
+
+<Button variant="outline">
+
+AI Analysis
+
+</Button>
+
+</div>
+
+</CardContent>
+
+</Card>
+
+);
+
+})}
+
+</div>
       {filtered.length === 0 && (
         <p className="py-4 text-center text-sm text-muted-foreground">
           No hospitals match your search

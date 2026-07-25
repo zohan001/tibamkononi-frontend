@@ -14,12 +14,19 @@ import { cn } from '@/lib/utils';
 import { HospitalRecommendation as RecType } from '@/types/triage';
 
 interface HospitalRecommendationProps {
-  recommendation: RecType;
+  recommendation?: RecType;
 }
 
 export function HospitalRecommendation({
   recommendation: rec,
 }: HospitalRecommendationProps) {
+  if (!rec) {
+    return (
+      <div className="text-center py-8 text-slate-500">
+        <p>Submit symptoms to see hospital recommendations.</p>
+      </div>
+    );
+  }
   return (
     <Card size="sm">
       <CardContent className="p-3">

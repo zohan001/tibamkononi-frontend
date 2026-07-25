@@ -16,12 +16,12 @@ interface HospitalSelectorItem {
 }
 
 interface HospitalSelectorProps {
-  hospitals: HospitalSelectorItem[];
+  hospitals?: HospitalSelectorItem[];
   onSelectionChange?: (selected: string[]) => void;
 }
 
 export function HospitalSelector({
-  hospitals,
+  hospitals = [],
   onSelectionChange,
 }: HospitalSelectorProps) {
   const [selected, setSelected] = useState<Set<string>>(new Set());

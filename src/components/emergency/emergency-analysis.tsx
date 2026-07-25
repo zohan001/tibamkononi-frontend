@@ -1,98 +1,259 @@
 'use client';
 
 import {
-  AlertTriangle,
-  Users,
-  Skull,
-  ShieldAlert,
   Ambulance,
+  BrainCircuit,
+  AlertTriangle,
+  Activity,
+  Clock3,
+  MapPinned,
+  Sparkles,
 } from 'lucide-react';
+
 import { Card, CardContent } from '@/components/ui/card';
-import { GemmaBadge } from '@/components/shared/gemma-badge';
-import { SeverityBadge } from '@/components/shared/severity-badge';
-import type { EmergencyAnalysis } from '@/types/emergency';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 
 interface EmergencyAnalysisProps {
-  analysis: EmergencyAnalysis;
+  severity?: number;
+  condition?: string;
+  recommendation?: string;
+  nearestHospital?: string;
+  estimatedArrival?: string;
 }
 
-const detailIcons = {
-  casualties: Users,
-  hazards: Skull,
-  recommendedResponse: ShieldAlert,
-};
+export function EmergencyAnalysis({
+  severity = 0,
+  condition = '',
+  recommendation = '',
+  nearestHospital = '',
+  estimatedArrival = '',
+}: EmergencyAnalysisProps) {
 
-const severityLabels: Record<string, string> = {
-  minor: 'Minor',
-  moderate: 'Moderate',
-  severe: 'Severe',
-  critical: 'Critical',
-};
+  const severityLabel =
+    severity >= 85
+      ? 'Critical'
+      : severity >= 60
+      ? 'High'
+      : severity >= 35
+      ? 'Moderate'
+      : 'Low';
 
-export function EmergencyAnalysis({ analysis }: EmergencyAnalysisProps) {
-  const details = [
-    { label: 'Casualties', value: analysis.casualties, key: 'casualties' as const },
-    { label: 'Hazards', value: analysis.hazards, key: 'hazards' as const },
-    {
-      label: 'Recommended Response',
-      value: analysis.recommendedResponse,
-      key: 'recommendedResponse' as const,
-    },
-  ];
+  const badgeColor =
+    severity >= 85
+      ? 'destructive'
+      : severity >= 60
+      ? 'secondary'
+      : 'default';
 
   return (
-    <Card>
-      <CardContent className="space-y-4 p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5 text-red-500" />
-            <h3 className="text-lg font-semibold">{analysis.type}</h3>
-          </div>
-          <GemmaBadge />
-        </div>
 
-        <div className="flex flex-wrap gap-2">
-          <SeverityBadge severity={analysis.severity} size="md" />
-          {severityLabels[analysis.severity] && (
-            <span className="text-xs text-muted-foreground">
-              {severityLabels[analysis.severity]} severity
-            </span>
-          )}
-        </div>
+    <Card className="shadow-lg border-red-100">
 
-        <p className="text-sm text-muted-foreground">{analysis.description}</p>
+      <CardContent className="p-8">
 
-        <div className="grid gap-3 sm:grid-cols-2">
-          {details.map((d) => {
-            const Icon = detailIcons[d.key];
-            return (
-              <div
-                key={d.key}
-                className="flex items-start gap-2 rounded-lg bg-muted/50 p-3"
-              >
-                <Icon className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-                <div className="min-w-0">
-                  <p className="text-xs text-muted-foreground">{d.label}</p>
-                  <p className="text-sm font-medium">{d.value}</p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        <div className="flex items-center justify-between mb-8">
 
-        <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 p-3 dark:border-red-900 dark:bg-red-950/50">
-          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />
-          <div>
-            <p className="text-xs font-medium text-red-700 dark:text-red-400">
-              Emergency Detected
-            </p>
-            <div className="flex items-center gap-1 text-sm text-red-600 dark:text-red-300">
-              <Ambulance className="h-4 w-4" />
-              <span>EMS has been notified. Stay safe.</span>
+          <div className="flex items-center gap-4">
+
+            <div className="rounded-full bg-red-100 p-4">
+
+              <BrainCircuit className="h-8 w-8 text-red-600"/>
+
             </div>
+
+            <div>
+
+              <h2 className="text-3xl font-bold">
+
+                Gemma Emergency Analysis
+
+              </h2>
+
+              <p className="text-slate-500">
+
+                AI-powered emergency assessment
+
+              </p>
+
+            </div>
+
           </div>
+
+          <Badge variant={badgeColor}>
+
+            <Sparkles className="mr-2 h-3 w-3"/>
+
+            {severityLabel}
+
+          </Badge>
+
         </div>
+
+        <div className="mb-8">
+
+          <div className="flex justify-between mb-2">
+
+            <span className="font-medium">
+
+              Emergency Severity
+
+            </span>
+
+            <strong>
+
+              {severity}%
+
+            </strong>
+
+          </div>
+
+          <Progress value={severity}/>
+
+        </div>
+
+        <div className="grid lg:grid-cols-2 gap-6 mb-8">
+
+          <Card>
+
+            <CardContent className="p-5">
+
+              <div className="flex items-center gap-3 mb-3">
+
+                <Activity className="text-red-600"/>
+
+                <strong>
+
+                  Possible Condition
+
+                </strong>
+
+              </div>
+
+              <p className="text-slate-700">
+
+                {condition}
+
+              </p>
+
+            </CardContent>
+
+          </Card>
+
+          <Card>
+
+            <CardContent className="p-5">
+
+              <div className="flex items-center gap-3 mb-3">
+
+                <Ambulance className="text-blue-600"/>
+
+                <strong>
+
+                  AI Recommendation
+
+                </strong>
+
+              </div>
+
+              <p className="text-slate-700">
+
+                {recommendation}
+
+              </p>
+
+            </CardContent>
+
+          </Card>
+
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-6 mb-8">
+
+          <Card>
+
+            <CardContent className="p-5">
+
+              <div className="flex items-center gap-3 mb-3">
+
+                <MapPinned className="text-green-600"/>
+
+                <strong>
+
+                  Recommended Hospital
+
+                </strong>
+
+              </div>
+
+              <p>
+
+                {nearestHospital}
+
+              </p>
+
+            </CardContent>
+
+          </Card>
+
+          <Card>
+
+            <CardContent className="p-5">
+
+              <div className="flex items-center gap-3 mb-3">
+
+                <Clock3 className="text-purple-600"/>
+
+                <strong>
+
+                  Estimated Arrival
+
+                </strong>
+
+              </div>
+
+              <p>
+
+                {estimatedArrival}
+
+              </p>
+
+            </CardContent>
+
+          </Card>
+
+        </div>
+
+        <div className="rounded-xl border border-red-200 bg-red-50 p-6">
+
+          <div className="flex items-center gap-3 mb-3">
+
+            <AlertTriangle className="text-red-600"/>
+
+            <strong>
+
+              Emergency Guidance
+
+            </strong>
+
+          </div>
+
+          <p className="leading-7 text-slate-700">
+
+            This assessment is generated by Gemma AI using the
+            information provided. It assists emergency responders
+            by estimating severity and recommending an appropriate
+            hospital, but it does not replace professional medical
+            judgment or emergency services.
+
+          </p>
+
+        </div>
+
       </CardContent>
+
     </Card>
+
   );
+
 }

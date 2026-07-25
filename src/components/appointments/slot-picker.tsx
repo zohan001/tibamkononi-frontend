@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils';
 import { TimeSlot } from '@/types/appointment';
 
 interface SlotPickerProps {
-  slots: TimeSlot[];
+  slots?: TimeSlot[];
   selectedDate?: Date;
   doctorName?: string;
   onDateChange?: (date: Date) => void;
@@ -18,7 +18,7 @@ interface SlotPickerProps {
 }
 
 export function SlotPicker({
-  slots,
+  slots = [],
   selectedDate,
   doctorName,
   onDateChange,

@@ -1,85 +1,339 @@
-'use client'
+'use client';
 
-import { FileText, TrendingUp, TrendingDown, Minus, Activity } from 'lucide-react'
+import {
+  Activity,
+  Users,
+  Package,
+  Bed,
+  Sparkles,
+  TrendingUp,
+} from 'lucide-react';
 
-import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Separator } from '@/components/ui/separator'
+import { Card, CardContent } from '@/components/ui/card';
 
-interface Stats {
-  patientsToday: number
-  patientsTrend: 'up' | 'down' | 'stable'
-  bedsOccupancy: number
-  bedsTrend: 'up' | 'down' | 'stable'
-  criticalStock: number
-  criticalTrend: 'up' | 'down' | 'stable'
-}
-
-const trendIcon = {
-  up: <TrendingUp className="h-3.5 w-3.5 text-red-500" />,
-  down: <TrendingDown className="h-3.5 w-3.5 text-emerald-500" />,
-  stable: <Minus className="h-3.5 w-3.5 text-muted-foreground" />,
+interface DailyReportProps {
+  totalPatients: number;
+  newPatients: number;
+  dischargedPatients: number;
+  bedsAvailable: number;
+  totalBeds: number;
+  staffPresent: number;
+  totalStaff: number;
+  criticalStockItems: number;
 }
 
 export function DailyReport({
-  summary,
-  stats,
-}: {
-  summary: string
-  stats: Stats
-}) {
+  totalPatients,
+  newPatients,
+  dischargedPatients,
+  bedsAvailable,
+  totalBeds,
+  staffPresent,
+  totalStaff,
+  criticalStockItems,
+}: DailyReportProps) {
+
+  const occupancy =
+    totalBeds > 0
+      ? Math.round(((totalBeds - bedsAvailable) / totalBeds) * 100)
+      : 0;
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <FileText className="h-5 w-5" />
-          Daily Report
-          <Badge variant="secondary" className="ml-auto gap-1">
-            <span className="h-1.5 w-1.5 rounded-full bg-purple-500" />
-            Gemma AI
-          </Badge>
-        </CardTitle>
-      </CardHeader>
 
-      <CardContent className="space-y-5">
-        <div className="grid gap-4 sm:grid-cols-3">
-          <div className="rounded-lg border p-3">
-            <div className="flex items-center justify-between text-sm text-muted-foreground">
-              <span>Patients Today</span>
-              {trendIcon[stats.patientsTrend]}
+    <div className="space-y-8">
+
+      <div>
+
+        <h2 className="text-3xl font-bold">
+
+          Daily Hospital Report
+
+        </h2>
+
+        <p className="text-slate-500 mt-2">
+
+          Executive summary of today&apos;s hospital operations.
+
+        </p>
+
+      </div>
+
+      <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-6">
+
+        <Card>
+
+          <CardContent className="p-6">
+
+            <Activity className="h-8 w-8 text-blue-600 mb-4"/>
+
+            <div className="text-3xl font-bold">
+
+              {totalPatients}
+
             </div>
-            <p className="mt-1 text-2xl font-bold">{stats.patientsToday}</p>
-          </div>
 
-          <div className="rounded-lg border p-3">
-            <div className="flex items-center justify-between text-sm text-muted-foreground">
-              <span>Bed Occupancy</span>
-              {trendIcon[stats.bedsTrend]}
+            <p className="text-slate-500">
+
+              Patients Today
+
+            </p>
+
+          </CardContent>
+
+        </Card>
+
+        <Card>
+
+          <CardContent className="p-6">
+
+            <Users className="h-8 w-8 text-green-600 mb-4"/>
+
+            <div className="text-3xl font-bold">
+
+              {staffPresent}/{totalStaff}
+
             </div>
-            <p className="mt-1 text-2xl font-bold">{stats.bedsOccupancy}%</p>
-          </div>
 
-          <div className="rounded-lg border p-3">
-            <div className="flex items-center justify-between text-sm text-muted-foreground">
-              <span>Critical Stock</span>
-              {trendIcon[stats.criticalTrend]}
+            <p className="text-slate-500">
+
+              Staff Present
+
+            </p>
+
+          </CardContent>
+
+        </Card>
+
+        <Card>
+
+          <CardContent className="p-6">
+
+            <Bed className="h-8 w-8 text-purple-600 mb-4"/>
+
+            <div className="text-3xl font-bold">
+
+              {bedsAvailable}
+
             </div>
-            <p className="mt-1 text-2xl font-bold">{stats.criticalStock}</p>
-          </div>
-        </div>
 
-        <Separator />
+            <p className="text-slate-500">
 
-        <div>
-          <div className="mb-2 flex items-center gap-2 text-sm font-medium">
-            <Activity className="h-4 w-4" />
-            Summary
+              Beds Available
+
+            </p>
+
+          </CardContent>
+
+        </Card>
+
+        <Card>
+
+          <CardContent className="p-6">
+
+            <Package className="h-8 w-8 text-orange-600 mb-4"/>
+
+            <div className="text-3xl font-bold">
+
+              {criticalStockItems}
+
+            </div>
+
+            <p className="text-slate-500">
+
+              Critical Stock Alerts
+
+            </p>
+
+          </CardContent>
+
+        </Card>
+
+      </div>
+
+      <div className="grid lg:grid-cols-2 gap-6">
+
+        <Card>
+
+          <CardContent className="p-8">
+
+            <h3 className="text-xl font-bold mb-6">
+
+              Hospital Performance
+
+            </h3>
+
+            <div className="space-y-5">
+
+              <div className="flex justify-between">
+
+                <span>New Patients</span>
+
+                <strong>{newPatients}</strong>
+
+              </div>
+
+              <div className="flex justify-between">
+
+                <span>Discharged Patients</span>
+
+                <strong>{dischargedPatients}</strong>
+
+              </div>
+
+              <div className="flex justify-between">
+
+                <span>Bed Occupancy</span>
+
+                <strong>{occupancy}%</strong>
+
+              </div>
+
+              <div className="flex justify-between">
+
+                <span>Staff Attendance</span>
+
+                <strong>
+
+                  {totalStaff > 0
+                    ? Math.round((staffPresent / totalStaff) * 100)
+                    : 0}%
+
+                </strong>
+
+              </div>
+
+            </div>
+
+          </CardContent>
+
+        </Card>
+
+        <Card>
+
+          <CardContent className="p-8">
+
+            <div className="flex items-center gap-3 mb-5">
+
+              <Sparkles className="text-blue-600"/>
+
+              <h3 className="text-xl font-bold">
+
+                Gemma AI Summary
+
+              </h3>
+
+            </div>
+
+            <div className="rounded-xl bg-blue-50 p-6 leading-8">
+
+              Hospital activity remains stable today.
+
+              {criticalStockItems > 0 && (
+                <>
+                  {' '}
+                  {criticalStockItems} inventory item(s) require urgent
+                  restocking.
+                </>
+              )}
+
+              {' '}Current bed occupancy is {occupancy}%.
+
+              Staff attendance is
+
+              {' '}
+              {totalStaff > 0
+                ? Math.round((staffPresent / totalStaff) * 100)
+                : 0}
+              %.
+
+              Continue monitoring patient flow and inventory
+              to maintain efficient healthcare delivery.
+
+            </div>
+
+          </CardContent>
+
+        </Card>
+
+      </div>
+
+      <Card>
+
+        <CardContent className="p-8">
+
+          <div className="flex items-center gap-3 mb-6">
+
+            <TrendingUp className="text-green-600"/>
+
+            <h3 className="text-xl font-bold">
+
+              Operational Highlights
+
+            </h3>
+
           </div>
-          <p className="whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
-            {summary}
-          </p>
-        </div>
-      </CardContent>
-    </Card>
-  )
+
+          <div className="grid md:grid-cols-3 gap-6">
+
+            <div className="rounded-lg bg-green-50 p-5">
+
+              <div className="text-lg font-bold text-green-700">
+
+                Patient Care
+
+              </div>
+
+              <p className="mt-2 text-sm text-slate-600">
+
+                Patient services are operating normally with
+                continuous monitoring.
+
+              </p>
+
+            </div>
+
+            <div className="rounded-lg bg-blue-50 p-5">
+
+              <div className="text-lg font-bold text-blue-700">
+
+                Hospital Capacity
+
+              </div>
+
+              <p className="mt-2 text-sm text-slate-600">
+
+                Available beds and staffing levels support
+                current patient demand.
+
+              </p>
+
+            </div>
+
+            <div className="rounded-lg bg-orange-50 p-5">
+
+              <div className="text-lg font-bold text-orange-700">
+
+                Inventory
+
+              </div>
+
+              <p className="mt-2 text-sm text-slate-600">
+
+                Continue monitoring medicine consumption and
+                replenish low-stock items promptly.
+
+              </p>
+
+            </div>
+
+          </div>
+
+        </CardContent>
+
+      </Card>
+
+    </div>
+
+  );
+
 }

@@ -1,261 +1,321 @@
-'use client'
+'use client';
 
-import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm } from 'react-hook-form'
-import { z } from 'zod'
-import { Mic, MicOff, Loader2 } from 'lucide-react'
-import { useState } from 'react'
-
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useState } from 'react';
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { useRegisterPatient } from '@/hooks/use-patients'
-import { toast } from 'sonner'
+  User,
+  Phone,
+  MapPin,
+  CreditCard,
+  HeartPulse,
+  Mic,
+  Sparkles,
+} from 'lucide-react';
 
-const patientSchema = z.object({
-  fullName: z.string().min(2, 'Name is required'),
-  idNumber: z.string().min(5, 'Valid ID number required'),
-  nhifNumber: z.string().optional(),
-  age: z.number().min(0).max(150),
-  gender: z.enum(['male', 'female', 'other']),
-  phone: z.string().min(10, 'Valid phone number required'),
-  address: z.string().min(3, 'Address is required'),
-  emergencyContact: z.string().min(10, 'Emergency contact is required'),
-  symptoms: z.string().min(5, 'Please describe the symptoms'),
-})
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 
-type PatientValues = z.infer<typeof patientSchema>
+interface PatientRegistration {
+  fullName: string;
+  idNumber: string;
+  nhifNumber?: string;
+  age: number;
+  gender: 'Male' | 'Female' | 'Other';
+  phone: string;
+  address: string;
+  emergencyContact: string;
+  symptoms: string;
+}
 
-export function PatientForm({ hospitalSlug }: { hospitalSlug: string }) {
-  const [isRecording, setIsRecording] = useState(false)
-  const registerPatient = useRegisterPatient(hospitalSlug)
+interface PatientFormProps {
+  onSubmit: (patient: PatientRegistration) => void;
+}
 
-  const form = useForm<PatientValues>({
-    resolver: zodResolver(patientSchema),
-    defaultValues: {
-      fullName: '',
-      idNumber: '',
-      nhifNumber: '',
-      age: 0,
-      gender: 'male',
-      phone: '',
-      address: '',
-      emergencyContact: '',
-      symptoms: '',
-    },
-  })
+export function PatientForm({
+  onSubmit,
+}: PatientFormProps) {
 
-  function onSubmit(values: PatientValues) {
-    registerPatient.mutate(values, {
-      onSuccess: () => {
-        toast.success('Patient registered successfully!')
-        form.reset()
-      },
-      onError: (error) => {
-        toast.error(`Registration failed: ${error.message}`)
-      },
-    })
-  }
+  const [form, setForm] = useState<PatientRegistration>({
+    fullName: '',
+    idNumber: '',
+    nhifNumber: '',
+    age: 0,
+    gender: 'Male',
+    phone: '',
+    address: '',
+    emergencyContact: '',
+    symptoms: '',
+  });
 
-  const toggleRecording = () => {
-    setIsRecording(!isRecording)
-  }
+  const update = (
+    key: keyof PatientRegistration,
+    value: string | number
+  ) => {
+    setForm((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+  };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Register Patient</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <FormField
-                control={form.control}
-                name="fullName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Full Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="John Doe" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+
+    <Card className="shadow-lg">
+
+      <CardContent className="p-8 space-y-8">
+
+        <div>
+
+          <h2 className="text-3xl font-bold">
+
+            Patient Registration
+
+          </h2>
+
+          <p className="text-slate-500 mt-2">
+
+            Register a patient into the Tibamkononi Healthcare System.
+
+          </p>
+
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-6">
+
+          <div>
+
+            <label className="font-medium mb-2 block">
+
+              Full Name
+
+            </label>
+
+            <div className="relative">
+
+              <User className="absolute left-3 top-3 h-5 w-5 text-slate-400"/>
+
+              <Input
+                className="pl-10"
+                value={form.fullName}
+                onChange={(e) => update('fullName', e.target.value)}
               />
 
-              <FormField
-                control={form.control}
-                name="idNumber"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>ID Number</FormLabel>
-                    <FormControl>
-                      <Input placeholder="12345678" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="nhifNumber"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>NHIF Number (optional)</FormLabel>
-                    <FormControl>
-                      <Input placeholder="NHIF-XXXX" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="age"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Age</FormLabel>
-                    <FormControl>
-                      <Input type="number" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="gender"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Gender</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="male">Male</SelectItem>
-                        <SelectItem value="female">Female</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="phone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Phone</FormLabel>
-                    <FormControl>
-                      <Input placeholder="0712345678" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
             </div>
 
-            <FormField
-              control={form.control}
-              name="address"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Address</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Full address" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          </div>
 
-            <FormField
-              control={form.control}
-              name="emergencyContact"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Emergency Contact</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Name - Phone" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          <div>
 
-            <FormField
-              control={form.control}
-              name="symptoms"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Symptoms</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Describe the patient's symptoms..."
-                      className="min-h-[100px]"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <label className="font-medium mb-2 block">
 
-            <div className="flex items-center gap-3">
-              <Button type="submit" disabled={form.formState.isSubmitting || registerPatient.isPending}>
-                {form.formState.isSubmitting || registerPatient.isPending ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : null}
-                Register Patient
-              </Button>
+              National ID
 
-              <Button type="button" variant="outline" onClick={toggleRecording}>
-                {isRecording ? (
-                  <MicOff className="mr-2 h-4 w-4 text-red-500" />
-                ) : (
-                  <Mic className="mr-2 h-4 w-4" />
-                )}
-                {isRecording ? 'Stop Recording' : 'Voice Input'}
-              </Button>
+            </label>
+
+            <div className="relative">
+
+              <CreditCard className="absolute left-3 top-3 h-5 w-5 text-slate-400"/>
+
+              <Input
+                className="pl-10"
+                value={form.idNumber}
+                onChange={(e) => update('idNumber', e.target.value)}
+              />
+
             </div>
 
-            <div className="rounded-lg border border-dashed bg-muted/30 p-4">
-              <h4 className="mb-2 text-sm font-medium text-muted-foreground">
-                AI Diagnosis Panel
-              </h4>
-              <p className="text-sm text-muted-foreground">
-                Submit the patient form to trigger AI-powered symptom analysis and
-                preliminary diagnosis suggestions.
-              </p>
+          </div>
+
+          <div>
+
+            <label className="font-medium mb-2 block">
+
+              NHIF / SHA Number
+
+            </label>
+
+            <Input
+              value={form.nhifNumber}
+              onChange={(e) => update('nhifNumber', e.target.value)}
+            />
+
+          </div>
+
+          <div>
+
+            <label className="font-medium mb-2 block">
+
+              Age
+
+            </label>
+
+            <Input
+              type="number"
+              value={form.age}
+              onChange={(e) => update('age', Number(e.target.value))}
+            />
+
+          </div>
+
+          <div>
+
+            <label className="font-medium mb-2 block">
+
+              Gender
+
+            </label>
+
+            <select
+              className="w-full rounded-md border px-3 py-2"
+              value={form.gender}
+              onChange={(e) =>
+                update(
+                  'gender',
+                  e.target.value as PatientRegistration['gender']
+                )
+              }
+            >
+              <option>Male</option>
+              <option>Female</option>
+              <option>Other</option>
+            </select>
+
+          </div>
+
+          <div>
+
+            <label className="font-medium mb-2 block">
+
+              Phone Number
+
+            </label>
+
+            <div className="relative">
+
+              <Phone className="absolute left-3 top-3 h-5 w-5 text-slate-400"/>
+
+              <Input
+                className="pl-10"
+                value={form.phone}
+                onChange={(e) => update('phone', e.target.value)}
+              />
+
             </div>
-          </form>
-        </Form>
+
+          </div>
+
+          <div>
+
+            <label className="font-medium mb-2 block">
+
+              Address
+
+            </label>
+
+            <div className="relative">
+
+              <MapPin className="absolute left-3 top-3 h-5 w-5 text-slate-400"/>
+
+              <Input
+                className="pl-10"
+                value={form.address}
+                onChange={(e) => update('address', e.target.value)}
+              />
+
+            </div>
+
+          </div>
+
+          <div>
+
+            <label className="font-medium mb-2 block">
+
+              Emergency Contact
+
+            </label>
+
+            <Input
+              value={form.emergencyContact}
+              onChange={(e) =>
+                update('emergencyContact', e.target.value)
+              }
+            />
+
+          </div>
+
+        </div>
+
+        <div>
+
+          <div className="flex items-center justify-between mb-2">
+
+            <label className="font-medium">
+
+              Symptoms
+
+            </label>
+
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+            >
+              <Mic className="mr-2 h-4 w-4"/>
+
+              Voice Input
+
+            </Button>
+
+          </div>
+
+          <Textarea
+            rows={6}
+            placeholder="Describe the patient's symptoms..."
+            value={form.symptoms}
+            onChange={(e) => update('symptoms', e.target.value)}
+          />
+
+        </div>
+
+        <div className="rounded-xl bg-blue-50 p-6">
+
+          <div className="flex items-center gap-3 mb-3">
+
+            <Sparkles className="text-blue-600"/>
+
+            <strong>
+
+              Gemma AI
+
+            </strong>
+
+          </div>
+
+          <p className="text-slate-700">
+
+            After registration, Gemma AI will analyze the patient&apos;s
+            symptoms and generate possible diagnoses, recommended
+            laboratory tests, and suggested treatment options for
+            clinician review.
+
+          </p>
+
+        </div>
+
+        <Button
+          className="w-full h-12 text-base"
+          onClick={() => onSubmit(form)}
+        >
+          <HeartPulse className="mr-2 h-5 w-5"/>
+
+          Register Patient
+
+        </Button>
+
       </CardContent>
+
     </Card>
-  )
+
+  );
+
 }

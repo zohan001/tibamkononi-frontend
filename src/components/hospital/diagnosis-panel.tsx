@@ -1,114 +1,238 @@
-'use client'
+'use client';
 
-import { Brain, CheckCircle2, AlertTriangle, FlaskConical } from 'lucide-react'
+import {
+  BrainCircuit,
+  Sparkles,
+  Activity,
+  FlaskConical,
+  Pill,
+  AlertTriangle,
+} from 'lucide-react';
 
-import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Progress } from '@/components/ui/progress'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Separator } from '@/components/ui/separator'
+import { Card, CardContent } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
 
-interface DiagnosisResult {
-  disease: string
-  confidence: number
+interface DiseaseProbability {
+  name: string;
+  probability: number;
 }
 
-interface Test {
-  name: string
-  recommended: boolean
+interface TreatmentItem {
+  medicine: string;
+  dosage: string;
+  frequency: string;
 }
 
-interface Treatment {
-  name: string
-  dosage: string
-  inStock: boolean
-  stockCount: number
+interface DiagnosisPanelProps {
+  diseases: DiseaseProbability[];
+  recommendedTests: string[];
+  recommendedTreatment: TreatmentItem[];
 }
 
-interface Diagnosis {
-  diseaseProbabilities: DiagnosisResult[]
-  recommendedTests: Test[]
-  recommendedTreatment: Treatment[]
-}
-
-export function DiagnosisPanel({ diagnosis }: { diagnosis: Diagnosis }) {
+export function DiagnosisPanel({
+  diseases,
+  recommendedTests,
+  recommendedTreatment,
+}: DiagnosisPanelProps) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Brain className="h-5 w-5" />
-          AI Diagnosis
-          <Badge variant="secondary" className="ml-auto gap-1">
-            <span className="h-1.5 w-1.5 rounded-full bg-purple-500" />
-            Gemma
+    <Card className="shadow-lg border-blue-100">
+
+      <CardContent className="p-8">
+
+        <div className="flex items-center gap-4 mb-8">
+
+          <div className="rounded-full bg-blue-100 p-4">
+
+            <BrainCircuit className="h-8 w-8 text-blue-600" />
+
+          </div>
+
+          <div>
+
+            <h2 className="text-3xl font-bold">
+
+              Gemma AI Diagnosis
+
+            </h2>
+
+            <p className="text-slate-500">
+
+              Clinical decision support powered by AI
+
+            </p>
+
+          </div>
+
+          <Badge className="ml-auto">
+
+            <Sparkles className="mr-1 h-3 w-3" />
+
+            AI Generated
+
           </Badge>
-        </CardTitle>
-      </CardHeader>
 
-      <CardContent className="space-y-6">
-        <div className="space-y-3">
-          <h4 className="text-sm font-medium">Disease Probabilities</h4>
-          {diagnosis.diseaseProbabilities.map((d) => (
-            <div key={d.disease} className="space-y-1">
-              <div className="flex justify-between text-sm">
-                <span>{d.disease}</span>
-                <span className="text-muted-foreground">{d.confidence}%</span>
+        </div>
+
+        {/* Disease Prediction */}
+
+        <div className="mb-10">
+
+          <div className="flex items-center gap-2 mb-5">
+
+            <Activity className="text-red-600" />
+
+            <h3 className="text-xl font-bold">
+
+              Possible Conditions
+
+            </h3>
+
+          </div>
+
+          <div className="space-y-5">
+
+            {diseases.map((disease) => (
+
+              <div key={disease.name}>
+
+                <div className="flex justify-between mb-2">
+
+                  <span className="font-medium">
+
+                    {disease.name}
+
+                  </span>
+
+                  <span className="font-bold">
+
+                    {disease.probability}%
+
+                  </span>
+
+                </div>
+
+                <Progress value={disease.probability} />
+
               </div>
-              <Progress value={d.confidence} className="h-2" />
-            </div>
-          ))}
+
+            ))}
+
+          </div>
+
         </div>
 
-        <Separator />
+        {/* Recommended Tests */}
 
-        <div className="space-y-3">
-          <h4 className="flex items-center gap-2 text-sm font-medium">
-            <FlaskConical className="h-4 w-4" />
-            Recommended Tests
-          </h4>
-          {diagnosis.recommendedTests.map((test) => (
-            <label
-              key={test.name}
-              className="flex items-center gap-2 text-sm"
-            >
-              <Checkbox defaultChecked={test.recommended} />
-              {test.name}
-            </label>
-          ))}
+        <div className="mb-10">
+
+          <div className="flex items-center gap-2 mb-5">
+
+            <FlaskConical className="text-purple-600" />
+
+            <h3 className="text-xl font-bold">
+
+              Recommended Tests
+
+            </h3>
+
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-4">
+
+            {recommendedTests.map((test) => (
+
+              <div
+                key={test}
+                className="rounded-lg border bg-slate-50 p-4"
+              >
+                🧪 {test}
+              </div>
+
+            ))}
+
+          </div>
+
         </div>
 
-        <Separator />
+        {/* Treatment */}
 
-        <div className="space-y-3">
-          <h4 className="flex items-center gap-2 text-sm font-medium">
-            Recommended Treatment
-          </h4>
-          {diagnosis.recommendedTreatment.map((t) => (
-            <div
-              key={t.name}
-              className="flex items-center justify-between rounded-lg border p-3"
-            >
-              <div>
-                <p className="text-sm font-medium">{t.name}</p>
-                <p className="text-xs text-muted-foreground">
-                  {t.dosage}
+        <div>
+
+          <div className="flex items-center gap-2 mb-5">
+
+            <Pill className="text-green-600" />
+
+            <h3 className="text-xl font-bold">
+
+              Suggested Treatment
+
+            </h3>
+
+          </div>
+
+          <div className="space-y-4">
+
+            {recommendedTreatment.map((item) => (
+
+              <div
+                key={item.medicine}
+                className="rounded-lg border p-5"
+              >
+
+                <div className="font-bold text-lg">
+
+                  {item.medicine}
+
+                </div>
+
+                <p className="text-slate-600 mt-2">
+
+                  {item.dosage}
+
                 </p>
+
+                <p className="text-slate-500">
+
+                  {item.frequency}
+
+                </p>
+
               </div>
-              {t.inStock ? (
-                <Badge className="bg-emerald-500 hover:bg-emerald-600 gap-1">
-                  <CheckCircle2 className="h-3 w-3" />
-                  In Stock ({t.stockCount})
-                </Badge>
-              ) : (
-                <Badge variant="destructive" className="gap-1">
-                  <AlertTriangle className="h-3 w-3" />
-                  Out of Stock
-                </Badge>
-              )}
-            </div>
-          ))}
+
+            ))}
+
+          </div>
+
         </div>
+
+        <div className="mt-10 rounded-xl bg-amber-50 border border-amber-200 p-5">
+
+          <div className="flex items-center gap-3">
+
+            <AlertTriangle className="text-amber-600" />
+
+            <strong>
+
+              Clinical Notice
+
+            </strong>
+
+          </div>
+
+          <p className="mt-3 text-slate-700 leading-7">
+
+            These recommendations are generated by Gemma AI as a
+            clinical decision-support tool. Final diagnosis,
+            investigations, and treatment decisions remain the
+            responsibility of the licensed healthcare professional.
+
+          </p>
+
+        </div>
+
       </CardContent>
+
     </Card>
-  )
+  );
 }

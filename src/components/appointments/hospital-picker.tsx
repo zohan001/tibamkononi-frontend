@@ -17,11 +17,11 @@ interface HospitalPickerItem {
 }
 
 interface HospitalPickerProps {
-  hospitals: HospitalPickerItem[];
+  hospitals?: HospitalPickerItem[];
   onSelect?: (slug: string) => void;
 }
 
-export function HospitalPicker({ hospitals, onSelect }: HospitalPickerProps) {
+export function HospitalPicker({ hospitals = [], onSelect }: HospitalPickerProps) {
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<string | null>(null);
 
