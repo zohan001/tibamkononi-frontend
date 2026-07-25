@@ -14,6 +14,8 @@ interface Emergency {
 
 interface LiveEmergencyDashboardProps {
   emergencies?: Emergency[];
+  resources?: { beds: { available: number; total: number }; ambulances: { available: number; total: number }; doctors: { available: number; total: number } };
+  aiPredictions?: string[];
 }
 
 const severityColor: Record<string, string> = {
@@ -29,7 +31,15 @@ const defaultResources = {
   doctors: { available: 18, total: 30 },
 };
 
-export function LiveEmergencyDashboard({ emergencies = [] }: LiveEmergencyDashboardProps) {
+const defaultPredictions = [
+  'Predicted surge in cardiac cases over the next 2 hours.',
+  'Recommended: Prepare 3 additional ICU beds at Mombasa Hospital.',
+  'Ambulance ETA average: 12 min across active dispatches.',
+];
+
+export function LiveEmergencyDashboard({ emergencies = [], resources, aiPredictions }: LiveEmergencyDashboardProps) {
+  const res = resources ?? defaultResources;
+  const predictions = aiPredictions ?? defaultPredictions;
   const counts = { critical: 0, high: 0, moderate: 0, low: 0 };
   emergencies.forEach((e) => {
     const s = e.severity.toLowerCase();
@@ -85,9 +95,9 @@ export function LiveEmergencyDashboard({ emergencies = [] }: LiveEmergencyDashbo
         <h3 className="font-semibold mb-3">Resource Availability</h3>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {([
-            { icon: BedDouble, label: 'Beds', ...defaultResources.beds },
-            { icon: Ambulance, label: 'Ambulances', ...defaultResources.ambulances },
-            { icon: Stethoscope, label: 'Doctors', ...defaultResources.doctors },
+            { icon: BedDouble, label: 'Beds', ...res.beds },
+            { icon: Ambulance, label: 'Ambulances', ...res.ambulances },
+            { icon: Stethoscope, label: 'Doctors', ...res.doctors },
           ]).map(({ icon: Icon, label, available, total }) => (
             <Card key={label}>
               <CardContent className="p-4">
@@ -109,9 +119,9 @@ export function LiveEmergencyDashboard({ emergencies = [] }: LiveEmergencyDashbo
             <h3 className="font-semibold">AI Predictions</h3>
           </div>
           <ul className="space-y-1.5 text-sm text-slate-600">
-            <li>Predicted surge in cardiac cases over the next 2 hours.</li>
-            <li>Recommended: Prepare 3 additional ICU beds at Mombasa Hospital.</li>
-            <li>Ambulance ETA average: 12 min across active dispatches.</li>
+            {predictions.map((p, i) => (
+              <li key={i}>{p}</li>
+            ))}
           </ul>
         </CardContent>
       </Card>

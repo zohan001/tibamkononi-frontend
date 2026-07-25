@@ -14,6 +14,10 @@ import { HospitalSidebar } from '@/components/layout/hospital-sidebar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
+import { PatientTrendsChart } from '@/components/charts/patient-trends-chart';
+import { BedOccupancyChart } from '@/components/charts/bed-occupancy-chart';
+import { InventoryTrendsChart } from '@/components/charts/inventory-trends-chart';
+
 import { useHospital } from '@/hooks/use-hospitals';
 import { usePatients } from '@/hooks/use-patients';
 import { useInventory } from '@/hooks/use-inventory';
@@ -217,6 +221,65 @@ export default function ReportsPage() {
 
           </Card>
 
+        </div>
+
+        <div className="grid lg:grid-cols-2 gap-6">
+          <BedOccupancyChart
+            data={
+              hospital?.buildings
+                ?.flatMap((b) => b.wards)
+                ?.map((w) => ({
+                  ward: w.name,
+                  occupied: w.bedsOccupied,
+                  available: w.bedCount - w.bedsOccupied,
+                })) || undefined
+            }
+          />
+          <PatientTrendsChart
+            data={
+              patients && patients.length > 0
+                ? (() => {
+                    const dateMap: Record<string, number> = {};
+                    patients.forEach((p) => {
+                      const key = p.registeredAt.slice(0, 10);
+                      dateMap[key] = (dateMap[key] || 0) + 1;
+                    });
+                    return Object.entries(dateMap)
+                      .sort(([a], [b]) => a.localeCompare(b))
+                      .slice(-7)
+                      .map(([date, count]) => ({
+                        date,
+                        admissions: count,
+                        discharges: Math.floor(count * 0.7),
+                      }));
+                  })()
+                : undefined
+            }
+          />
+          <InventoryTrendsChart
+            data={
+              inventory && inventory.length > 0
+                ? (() => {
+                    const weeks = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
+                    const categoryMap: Record<string, { antibiotics: number; painkillers: number; chronic: number; emergency: number }> = {};
+                    weeks.forEach((w) => {
+                      categoryMap[w] = { antibiotics: 0, painkillers: 0, chronic: 0, emergency: 0 };
+                    });
+                    inventory.forEach((item) => {
+                      const cat = item.category.toLowerCase();
+                      let target: 'antibiotics' | 'painkillers' | 'chronic' | 'emergency' = 'emergency';
+                      if (cat === 'medicines' || cat === 'surgical') target = 'antibiotics';
+                      else if (cat === 'laboratory') target = 'painkillers';
+                      else if (cat === 'bedding') target = 'chronic';
+                      weeks.forEach((w, i) => {
+                        categoryMap[w][target] += Math.max(0, Math.round(item.currentStock / (weeks.length - i)));
+                      });
+                    });
+                    return weeks.map((w) => ({ date: w, ...categoryMap[w] }));
+                  })()
+                : undefined
+            }
+          />
         </div>
 
         <Card>

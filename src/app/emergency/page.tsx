@@ -20,10 +20,59 @@ import { VoiceRecorder } from '@/components/emergency/voice-recorder';
 import { EmergencyAnalysis } from '@/components/emergency/emergency-analysis';
 import { HospitalSelector } from '@/components/emergency/hospital-selector';
 import { RouteMap } from '@/components/emergency/route-map';
+import { EmergencyRequestForm } from '@/components/emergency/emergency-request-form';
+import { AmbulanceTracking } from '@/components/emergency/ambulance-tracking';
+import { EmergencyTimeline } from '@/components/emergency/emergency-timeline';
+import { useAnalyzeEmergency } from '@/hooks/use-emergency';
+import type { EmergencyAnalysis as EmergencyAnalysisResult } from '@/types/emergency';
 
 export default function EmergencyPage() {
 
-  const [severity] = useState('Critical');
+  const [severity, setSeverity] = useState('Critical');
+  const [analysisResult, setAnalysisResult] = useState<EmergencyAnalysisResult | null>(null);
+
+  const analyzeMutation = useAnalyzeEmergency();
+
+  const handleFormSubmit = (data: { location: string; type: string; severity: string; hasPhoto: boolean; hasVoice: boolean }) => {
+    const [lat, lng] = data.location.split(',').map((s) => parseFloat(s.trim()));
+    analyzeMutation.mutate(
+      {
+        input_type: data.hasPhoto ? 'camera' : data.hasVoice ? 'voice' : 'text',
+        latitude: isNaN(lat) ? 0 : lat,
+        longitude: isNaN(lng) ? 0 : lng,
+        text: `${data.type}: ${data.severity}`,
+      },
+      {
+        onSuccess: (result) => {
+          setAnalysisResult(result);
+          setSeverity(result.severity.charAt(0).toUpperCase() + result.severity.slice(1));
+        },
+      }
+    );
+  };
+
+  const timelineEvents = analysisResult
+    ? [
+        {
+          time: new Date().toLocaleTimeString(),
+          type: 'report' as const,
+          title: 'Emergency Report Submitted',
+          description: `${analysisResult.type} reported. AI processing started immediately.`,
+        },
+        {
+          time: new Date().toLocaleTimeString(),
+          type: 'analysis' as const,
+          title: 'AI Severity Analysis Complete',
+          description: `${analysisResult.severity.charAt(0).toUpperCase() + analysisResult.severity.slice(1)} severity detected. ${analysisResult.description}`,
+        },
+        {
+          time: new Date().toLocaleTimeString(),
+          type: 'dispatch' as const,
+          title: 'Recommended Response',
+          description: analysisResult.recommendedResponse,
+        },
+      ]
+    : [];
 
   return (
 
@@ -66,6 +115,10 @@ export default function EmergencyPage() {
       </section>
 
       <div className="max-w-7xl mx-auto p-6 space-y-8">
+
+        {/* Emergency Request Form */}
+
+        <EmergencyRequestForm onSubmit={handleFormSubmit} />
 
         {/* Emergency Status */}
 
@@ -205,6 +258,30 @@ export default function EmergencyPage() {
 
         </div>
 
+        {/* Ambulance Tracking */}
+
+        <Card>
+
+          <CardContent className="p-8">
+
+            <div className="flex items-center gap-3 mb-6">
+
+              <MapPin className="text-red-600"/>
+
+              <h2 className="text-2xl font-bold">
+
+                Ambulance Tracking
+
+              </h2>
+
+            </div>
+
+            <AmbulanceTracking ambulances={[]} />
+
+          </CardContent>
+
+        </Card>
+
         {/* Live Route Map */}
 
         <Card>
@@ -241,97 +318,7 @@ export default function EmergencyPage() {
 
             </h2>
 
-            <div className="space-y-6">
-
-              <div className="flex items-center gap-4">
-
-                <div className="h-4 w-4 rounded-full bg-red-600"/>
-
-                <div>
-
-                  <p className="font-semibold">
-
-                    Emergency Report Submitted
-
-                  </p>
-
-                  <p className="text-sm text-slate-500">
-
-                    AI processing started immediately.
-
-                  </p>
-
-                </div>
-
-              </div>
-
-              <div className="flex items-center gap-4">
-
-                <div className="h-4 w-4 rounded-full bg-blue-600"/>
-
-                <div>
-
-                  <p className="font-semibold">
-
-                    AI Severity Analysis Complete
-
-                  </p>
-
-                  <p className="text-sm text-slate-500">
-
-                    Critical trauma detected.
-
-                  </p>
-
-                </div>
-
-              </div>
-
-              <div className="flex items-center gap-4">
-
-                <div className="h-4 w-4 rounded-full bg-green-600"/>
-
-                <div>
-
-                  <p className="font-semibold">
-
-                    Hospital Selected
-
-                  </p>
-
-                  <p className="text-sm text-slate-500">
-
-                    Nearest suitable hospital identified.
-
-                  </p>
-
-                </div>
-
-              </div>
-
-              <div className="flex items-center gap-4">
-
-                <div className="h-4 w-4 rounded-full bg-orange-500"/>
-
-                <div>
-
-                  <p className="font-semibold">
-
-                    Ambulance Dispatched
-
-                  </p>
-
-                  <p className="text-sm text-slate-500">
-
-                    Estimated arrival: 8 minutes.
-
-                  </p>
-
-                </div>
-
-              </div>
-
-            </div>
+            <EmergencyTimeline events={timelineEvents} />
 
           </CardContent>
 

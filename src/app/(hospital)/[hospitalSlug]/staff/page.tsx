@@ -38,6 +38,7 @@ export default function StaffPage() {
     name: s.staffName,
     role: s.role,
     status: s.status,
+    clockIn: s.checkInTime,
   }));
 
   const totalStaff = staff.length;

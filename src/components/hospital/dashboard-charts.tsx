@@ -72,9 +72,14 @@ const revenueConfig: ChartConfig = {
 interface DashboardChartsProps {
   type?: 'patient-trends' | 'bed-occupancy' | 'revenue' | 'staff-distribution';
   data?: Record<string, unknown>[];
+  patientTrendData?: typeof patientTrendData;
+  bedOccupancyData?: typeof bedOccupancyData;
+  revenueData?: typeof revenueData;
+  staffData?: typeof staffData;
 }
 
-function PatientTrendsChart() {
+function PatientTrendsChart({ data: patientTrendDataProp }: { data?: typeof patientTrendData }) {
+  const chartData = patientTrendDataProp ?? patientTrendData;
   return (
     <Card className="border-0 shadow-md">
       <CardHeader>
@@ -83,7 +88,7 @@ function PatientTrendsChart() {
       <CardContent>
         <ChartContainer config={patientTrendConfig} className="h-[300px] w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={patientTrendData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
+            <AreaChart data={chartData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
               <defs>
                 <linearGradient id="gradAdmissions" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="hsl(217 91% 60%)" stopOpacity={0.3} />
@@ -123,7 +128,8 @@ function PatientTrendsChart() {
   );
 }
 
-function BedOccupancyChart() {
+function BedOccupancyChart({ data: bedOccupancyDataProp }: { data?: typeof bedOccupancyData }) {
+  const chartData = bedOccupancyDataProp ?? bedOccupancyData;
   return (
     <Card className="border-0 shadow-md">
       <CardHeader>
@@ -134,7 +140,7 @@ function BedOccupancyChart() {
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
               <Pie
-                data={bedOccupancyData}
+                data={chartData}
                 cx="50%"
                 cy="50%"
                 innerRadius={70}
@@ -143,14 +149,14 @@ function BedOccupancyChart() {
                 dataKey="value"
                 nameKey="ward"
               >
-                {bedOccupancyData.map((entry, index) => (
+                {chartData.map((entry, index) => (
                   <Cell key={index} fill={entry.fill} stroke="transparent" />
                 ))}
               </Pie>
               <ChartTooltip
                 content={({ active, payload }) => {
                   if (!active || !payload?.length) return null;
-                  const data = payload[0].payload as (typeof bedOccupancyData)[0];
+                  const data = payload[0].payload as (typeof chartData)[0];
                   return (
                     <div className="rounded-lg border bg-background px-3 py-2 text-xs shadow-xl">
                       <div className="flex items-center gap-2">
@@ -187,7 +193,8 @@ function BedOccupancyChart() {
   );
 }
 
-function RevenueChart() {
+function RevenueChart({ data: revenueDataProp }: { data?: typeof revenueData }) {
+  const chartData = revenueDataProp ?? revenueData;
   return (
     <Card className="border-0 shadow-md">
       <CardHeader>
@@ -196,7 +203,7 @@ function RevenueChart() {
       <CardContent>
         <ChartContainer config={revenueConfig} className="h-[300px] w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={revenueData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
+            <BarChart data={chartData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="day" tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
               <YAxis
@@ -225,7 +232,8 @@ function RevenueChart() {
   );
 }
 
-function StaffDistributionChart() {
+function StaffDistributionChart({ data: staffDataProp }: { data?: typeof staffData }) {
+  const chartData = staffDataProp ?? staffData;
   return (
     <Card className="border-0 shadow-md">
       <CardHeader>
@@ -236,7 +244,7 @@ function StaffDistributionChart() {
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
               <Pie
-                data={staffData}
+                data={chartData}
                 cx="50%"
                 cy="50%"
                 outerRadius={110}
@@ -244,14 +252,14 @@ function StaffDistributionChart() {
                 dataKey="count"
                 nameKey="role"
               >
-                {staffData.map((entry, index) => (
+                {chartData.map((entry, index) => (
                   <Cell key={index} fill={entry.fill} stroke="transparent" />
                 ))}
               </Pie>
               <ChartTooltip
                 content={({ active, payload }) => {
                   if (!active || !payload?.length) return null;
-                  const data = payload[0].payload as (typeof staffData)[0];
+                  const data = payload[0].payload as (typeof chartData)[0];
                   return (
                     <div className="rounded-lg border bg-background px-3 py-2 text-xs shadow-xl">
                       <div className="flex items-center gap-2">
@@ -288,8 +296,10 @@ function StaffDistributionChart() {
   );
 }
 
-function DashboardCharts({ type = 'patient-trends' }: DashboardChartsProps) {
-  const chartMap = {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function DashboardCharts({ type = 'patient-trends', data, patientTrendData: ptData, bedOccupancyData: boData, revenueData: rData, staffData: sData }: DashboardChartsProps) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const chartMap: Record<string, React.ComponentType<any>> = {
     'patient-trends': PatientTrendsChart,
     'bed-occupancy': BedOccupancyChart,
     revenue: RevenueChart,
@@ -297,19 +307,25 @@ function DashboardCharts({ type = 'patient-trends' }: DashboardChartsProps) {
   };
 
   const ChartComponent = chartMap[type];
-  return <ChartComponent />;
+  const dataMap: Record<string, unknown> = {
+    'patient-trends': ptData,
+    'bed-occupancy': boData,
+    revenue: rData,
+    'staff-distribution': sData,
+  };
+  return <ChartComponent data={dataMap[type]} />;
 }
 
-function AllDashboardCharts() {
+function AllDashboardCharts({ patientTrendData: ptData, bedOccupancyData: boData, revenueData: rData, staffData: sData }: DashboardChartsProps) {
   return (
     <div className="space-y-6">
       <div className="grid gap-6 lg:grid-cols-2">
-        <PatientTrendsChart />
-        <BedOccupancyChart />
+        <PatientTrendsChart data={ptData} />
+        <BedOccupancyChart data={boData} />
       </div>
       <div className="grid gap-6 lg:grid-cols-2">
-        <RevenueChart />
-        <StaffDistributionChart />
+        <RevenueChart data={rData} />
+        <StaffDistributionChart data={sData} />
       </div>
     </div>
   );

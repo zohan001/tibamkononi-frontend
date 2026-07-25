@@ -114,16 +114,29 @@ function HourlyHeatmap({ data }: { data: number[] }) {
   );
 }
 
-export function EmergencyAnalytics() {
-  const maxResponse = Math.max(...defaultResponseData.map((d) => d.value));
+interface EmergencyAnalyticsProps {
+  responseData?: { label: string; value: number }[];
+  typeData?: { name: string; value: number; color: string }[];
+  hourlyData?: { hour: string; count: number }[];
+  metrics?: { avgResponse: string; total: number; successRate: string };
+}
+
+export function EmergencyAnalytics(props: EmergencyAnalyticsProps) {
+  const responseData = props.responseData ?? defaultResponseData;
+  const typeData = (props.typeData ?? defaultTypeData) as (typeof defaultTypeData);
+  const hourlyData = props.hourlyData
+    ? props.hourlyData.map((h) => h.count)
+    : defaultHourlyData;
+  const metrics = props.metrics ?? defaultMetrics;
+  const maxResponse = Math.max(...responseData.map((d) => d.value));
 
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {([
-          { icon: Clock3, label: 'Avg Response', value: defaultMetrics.avgResponse },
-          { icon: TrendingUp, label: 'Total Emergencies', value: String(defaultMetrics.total) },
-          { icon: BarChart3, label: 'Success Rate', value: defaultMetrics.successRate },
+          { icon: Clock3, label: 'Avg Response', value: metrics.avgResponse },
+          { icon: TrendingUp, label: 'Total Emergencies', value: String(metrics.total) },
+          { icon: BarChart3, label: 'Success Rate', value: metrics.successRate },
         ]).map(({ icon: Icon, label, value }) => (
           <Card key={label}>
             <CardContent className="p-4">
@@ -143,7 +156,7 @@ export function EmergencyAnalytics() {
             <BarChart3 className="h-5 w-5 text-blue-600" />
             <h3 className="font-semibold">Weekly Response Times</h3>
           </div>
-          <BarChartMini data={defaultResponseData} max={maxResponse} />
+          <BarChartMini data={responseData} max={maxResponse} />
         </CardContent>
       </Card>
 
@@ -153,7 +166,7 @@ export function EmergencyAnalytics() {
             <PieChart className="h-5 w-5 text-purple-600" />
             <h3 className="font-semibold">Emergency Types Breakdown</h3>
           </div>
-          <PieChartMini data={defaultTypeData} />
+          <PieChartMini data={typeData} />
         </CardContent>
       </Card>
 
@@ -163,7 +176,7 @@ export function EmergencyAnalytics() {
             <Clock3 className="h-5 w-5 text-red-600" />
             <h3 className="font-semibold">Hourly Distribution</h3>
           </div>
-          <HourlyHeatmap data={defaultHourlyData} />
+          <HourlyHeatmap data={hourlyData} />
         </CardContent>
       </Card>
     </div>

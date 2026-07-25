@@ -19,6 +19,10 @@ import { SystemStatus } from '@/components/hospital/system-status';
 import { PatientRiskMonitor } from '@/components/hospital/patient-risk-monitor';
 import { BedManagementCenter } from '@/components/hospital/bed-management-center';
 import { DoctorWorkloadMonitor } from '@/components/hospital/doctor-workload-monitor';
+import { BedGrid } from '@/components/hospital/bed-grid';
+import { StaffAttendance } from '@/components/hospital/staff-attendance';
+import { MedicineChart } from '@/components/hospital/medicine-chart';
+import { AnalyticsCards } from '@/components/hospital/analytics-cards';
 
 export default function HospitalDashboardPage() {
   const params = useParams();
@@ -53,6 +57,73 @@ export default function HospitalDashboardPage() {
     { label: 'Beds Available', value: String(bedsAvailable), icon: Bed, color: 'text-green-500' },
     { label: 'Staff Present', value: `${presentCount}/${totalStaff}`, icon: Users, color: 'text-purple-500' },
     { label: 'Stock Warnings', value: String(stockWarnings), icon: AlertTriangle, color: 'text-yellow-500' },
+  ];
+
+  const wards = (hospital?.buildings || []).flatMap((b) =>
+    b.wards.map((w) => ({ name: w.name, bedCount: w.bedCount, bedsOccupied: w.bedsOccupied }))
+  );
+
+  const medicineData = (inventory || [])
+    .filter((i) => i.category === 'Medicines')
+    .map((i) => ({
+      name: i.name,
+      stock: i.currentStock,
+      used: i.dailyUsage * 30,
+      category: i.category,
+      expiryDays: i.expiryDate
+        ? Math.max(0, Math.round((new Date(i.expiryDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+        : undefined,
+    }));
+
+  const mappedStaff = (staffAttendance || []).map((s) => ({
+    id: s.staffId,
+    name: s.staffName,
+    role: s.role,
+    status: s.status,
+    clockIn: s.checkInTime,
+  }));
+
+  const analyticsCards = [
+    {
+      label: 'Total Patients',
+      value: (patients || []).length,
+      icon: <Activity className="h-5 w-5" />,
+      trend: 'up' as const,
+      change: `+${(patients || []).length}`,
+      color: 'from-blue-500 to-blue-600',
+    },
+    {
+      label: 'Beds Available',
+      value: bedsAvailable,
+      icon: <Bed className="h-5 w-5" />,
+      trend: 'neutral' as const,
+      change: '0%',
+      color: 'from-emerald-500 to-green-600',
+    },
+    {
+      label: 'Staff on Duty',
+      value: presentCount,
+      icon: <Users className="h-5 w-5" />,
+      trend: 'neutral' as const,
+      change: `${totalStaff} total`,
+      color: 'from-violet-500 to-purple-600',
+    },
+    {
+      label: 'Stock Warnings',
+      value: stockWarnings,
+      icon: <AlertTriangle className="h-5 w-5" />,
+      trend: stockWarnings > 0 ? 'down' as const : 'up' as const,
+      change: stockWarnings > 0 ? `${stockWarnings} items` : 'All clear',
+      color: 'from-amber-500 to-orange-600',
+    },
+    {
+      label: 'Staff Attendance',
+      value: totalStaff > 0 ? `${Math.round((presentCount / totalStaff) * 100)}%` : '0%',
+      icon: <Users className="h-5 w-5" />,
+      trend: 'up' as const,
+      change: `${presentCount}/${totalStaff}`,
+      color: 'from-rose-500 to-pink-600',
+    },
   ];
 
   return (
@@ -93,6 +164,26 @@ export default function HospitalDashboardPage() {
               </CardContent>
             </Card>
           ))}
+        </div>
+
+        {/* Analytics Cards */}
+        <div className="mb-6">
+          <AnalyticsCards cards={analyticsCards} />
+        </div>
+
+        {/* Bed Grid */}
+        <div className="mb-6">
+          <BedGrid wards={wards} />
+        </div>
+
+        {/* Medicine Chart */}
+        <div className="mb-6">
+          <MedicineChart medicines={medicineData.length > 0 ? medicineData : undefined} />
+        </div>
+
+        {/* Staff Attendance */}
+        <div className="mb-6">
+          <StaffAttendance staff={mappedStaff.length > 0 ? mappedStaff : undefined} />
         </div>
 
         {/* AI Insights */}

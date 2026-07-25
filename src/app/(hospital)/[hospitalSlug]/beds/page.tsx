@@ -13,8 +13,10 @@ import {
 import { HospitalSidebar } from '@/components/layout/hospital-sidebar';
 
 import { BedGrid } from '@/components/hospital/bed-grid';
+import { MedicineChart } from '@/components/hospital/medicine-chart';
 
 import { useHospital } from '@/hooks/use-hospitals';
+import { useInventory } from '@/hooks/use-inventory';
 
 import { Loader2 } from 'lucide-react';
 
@@ -31,6 +33,7 @@ export default function BedsPage() {
   const slug = params.hospitalSlug as string;
 
   const { data: hospital, isLoading } = useHospital(slug);
+  const { data: inventory } = useInventory(slug);
 
   const wards = (hospital?.buildings || []).flatMap((b) =>
     b.wards.map((w) => ({
@@ -55,6 +58,18 @@ export default function BedsPage() {
     totalBeds === 0
       ? 0
       : Math.round((occupiedBeds / totalBeds) * 100);
+
+  const medicineData = (inventory || [])
+    .filter((i) => i.category === 'Medicines')
+    .map((i) => ({
+      name: i.name,
+      stock: i.currentStock,
+      used: i.dailyUsage * 30,
+      category: i.category,
+      expiryDays: i.expiryDate
+        ? Math.max(0, Math.round((new Date(i.expiryDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+        : undefined,
+    }));
 
   if (isLoading) {
     return (
@@ -334,6 +349,10 @@ export default function BedsPage() {
           </CardContent>
 
         </Card>
+
+        <div className="mb-8">
+          <MedicineChart medicines={medicineData.length > 0 ? medicineData : undefined} />
+        </div>
 
       </main>
 

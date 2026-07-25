@@ -1,7 +1,7 @@
 'use client';
 
 import { CountySidebar } from '@/components/layout/county-sidebar';
-import { ApprovalQueue } from '@/components/county/approval-queue';
+import { HospitalApprovalCard } from '@/components/county/hospital-approval-card';
 import { useCountyHospitals, useApproveHospital } from '@/hooks/use-county';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -9,15 +9,6 @@ import { toast } from 'sonner';
 export default function ApprovalsPage() {
   const { data: hospitals, isLoading } = useCountyHospitals();
   const approveHospital = useApproveHospital();
-
-  const pendingHospitals = (hospitals || [])
-    .filter((h) => h.status === 'pending')
-    .map((h) => ({
-      id: h.id,
-      name: h.name,
-      type: 'Private' as const,
-      createdAt: '2026-07-18',
-    }));
 
   const handleApprove = (id: string) => {
     approveHospital.mutate(id, {
@@ -41,12 +32,31 @@ export default function ApprovalsPage() {
     );
   }
 
+  const pendingHospitals = (hospitals || []).filter((h) => h.status === 'pending');
+
   return (
     <div className="flex min-h-[calc(100vh-200px)]">
       <CountySidebar />
       <div className="flex-1 p-6">
         <h1 className="text-2xl font-bold mb-6">Pending Hospital Approvals</h1>
-        <ApprovalQueue pendingHospitals={pendingHospitals} onApprove={handleApprove} />
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {pendingHospitals.map((h) => (
+            <HospitalApprovalCard
+              key={h.id}
+              hospital={{
+                name: h.name,
+                slug: h.id,
+                type: 'Hospital',
+                dateApplied: new Date().toISOString(),
+                documents: ['License', 'Registration Certificate'],
+              }}
+              onApprove={() => handleApprove(h.id)}
+            />
+          ))}
+        </div>
+        {pendingHospitals.length === 0 && (
+          <p className="text-muted-foreground text-center py-12">No pending approvals.</p>
+        )}
       </div>
     </div>
   );

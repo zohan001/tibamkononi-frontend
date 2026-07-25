@@ -1,13 +1,53 @@
 'use client';
 
-import { ArrowLeft, Brain, MapPin, Phone, Building2 } from 'lucide-react';
+import { ArrowLeft, Brain, MapPin, Phone, Building2, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { useHospital } from '@/hooks/use-hospitals';
+import { BedGrid } from '@/components/hospital/bed-grid';
+import { InventoryAnalytics } from '@/components/county/inventory-analytics';
 
 export default function CountyHospitalDetailsPage() {
+  const params = useParams();
+  const hospitalSlug = params.hospitalSlug as string;
+  const { data: hospital, isLoading } = useHospital(hospitalSlug);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+      </div>
+    );
+  }
+
+  const wards = (hospital?.buildings ?? []).flatMap((b) =>
+    b.wards.map((w) => ({
+      name: w.name,
+      bedCount: w.bedCount,
+      bedsOccupied: w.bedsOccupied,
+      status: w.bedsOccupied / w.bedCount > 0.9 ? 'critical' : w.bedsOccupied / w.bedCount > 0.7 ? 'warning' : 'normal',
+    }))
+  );
+
+  const inventoryItems = (hospital?.buildings ?? [])
+    .flatMap((b) => b.wards)
+    .flatMap((w) => {
+      const items = [];
+      if (w.type === 'Pharmacy') {
+        items.push({
+          name: `${w.name} Supplies`,
+          stock: Math.max(0, w.bedCount - w.bedsOccupied),
+          minRequired: w.bedCount,
+          expiryDays: 60,
+          category: 'General',
+        });
+      }
+      return items;
+    });
   return (
     <div className="min-h-screen bg-slate-50">
 
@@ -41,13 +81,13 @@ export default function CountyHospitalDetailsPage() {
 
                       <h1 className="text-4xl font-bold">
 
-                        Mama Ngina Hospital
+                        {hospital?.name ?? 'Hospital'}
 
                       </h1>
 
                       <p className="mt-2 text-slate-500">
 
-                        District Hospital
+                        {hospital?.type ?? 'Hospital'}
 
                       </p>
 
@@ -61,7 +101,7 @@ export default function CountyHospitalDetailsPage() {
 
                       <MapPin className="h-4 w-4" />
 
-                      Likoni, Mombasa County
+                      {hospital?.physicalAddress ?? 'Mombasa County'}
 
                     </div>
 
@@ -69,7 +109,7 @@ export default function CountyHospitalDetailsPage() {
 
                       <Phone className="h-4 w-4" />
 
-                      +254 712 345 678
+                      {hospital?.contactPhone ?? '+254 000 000 000'}
 
                     </div>
 
@@ -77,9 +117,9 @@ export default function CountyHospitalDetailsPage() {
 
                 </div>
 
-                <Badge className="bg-green-100 text-green-700 hover:bg-green-100">
+                <Badge className={hospital?.status === 'approved' ? "bg-green-100 text-green-700 hover:bg-green-100" : "bg-yellow-100 text-yellow-700 hover:bg-yellow-100"}>
 
-                  ACTIVE
+                  {hospital?.status?.toUpperCase() ?? 'ACTIVE'}
 
                 </Badge>
 
@@ -174,191 +214,17 @@ export default function CountyHospitalDetailsPage() {
 
         </Card>
 
+        {/* BED OCCUPANCY */}
+        {wards.length > 0 && (
+          <div className="mt-8">
+            <BedGrid wards={wards} />
+          </div>
+        )}
+
         {/* INVENTORY INTELLIGENCE */}
-
-<Card className="mt-8">
-
-  <CardContent className="p-8">
-
-    <div className="flex items-center justify-between">
-
-      <div>
-
-        <h2 className="text-2xl font-bold">
-
-          Inventory Intelligence
-
-        </h2>
-
-        <p className="text-slate-500 mt-2">
-
-          Live medicine availability monitored by Gemma AI.
-
-        </p>
-
-      </div>
-
-      <Badge>
-
-        Live Inventory
-
-      </Badge>
-
-    </div>
-
-    <div className="mt-8 overflow-x-auto">
-
-      <table className="w-full">
-
-        <thead>
-
-          <tr className="border-b">
-
-            <th className="py-3 text-left">Medicine</th>
-
-            <th className="text-left">Stock</th>
-
-            <th className="text-left">Daily Usage</th>
-
-            <th className="text-left">Days Left</th>
-
-            <th className="text-left">Status</th>
-
-          </tr>
-
-        </thead>
-
-        <tbody>
-
-          <tr className="border-b">
-
-            <td className="py-4">
-
-              Paediatric Amoxicillin
-
-            </td>
-
-            <td>12 bottles</td>
-
-            <td>15/day</td>
-
-            <td className="text-red-600 font-semibold">
-
-              &lt; 1 Day
-
-            </td>
-
-            <td>
-
-              <Badge variant="destructive">
-
-                Critical
-
-              </Badge>
-
-            </td>
-
-          </tr>
-
-          <tr className="border-b">
-
-            <td className="py-4">
-
-              ACT Malaria
-
-            </td>
-
-            <td>144 doses</td>
-
-            <td>12/day</td>
-
-            <td>
-
-              12 Days
-
-            </td>
-
-            <td>
-
-              <Badge>
-
-                Healthy
-
-              </Badge>
-
-            </td>
-
-          </tr>
-
-          <tr className="border-b">
-
-            <td className="py-4">
-
-              ORS Sachets
-
-            </td>
-
-            <td>35</td>
-
-            <td>25/day</td>
-
-            <td className="text-orange-600">
-
-              1 Day
-
-            </td>
-
-            <td>
-
-              <Badge className="bg-yellow-100 text-yellow-700">
-
-                Warning
-
-              </Badge>
-
-            </td>
-
-          </tr>
-
-          <tr>
-
-            <td className="py-4">
-
-              Insulin
-
-            </td>
-
-            <td>0</td>
-
-            <td>5/day</td>
-
-            <td className="text-red-600">
-
-              Out
-
-            </td>
-
-            <td>
-
-              <Badge variant="destructive">
-
-                Out of Stock
-
-              </Badge>
-
-            </td>
-
-          </tr>
-
-        </tbody>
-
-      </table>
-
-    </div>
-
-  </CardContent>
-
-</Card>
+        <div className="mt-8">
+          <InventoryAnalytics items={inventoryItems} />
+        </div>
 
       </div>
 

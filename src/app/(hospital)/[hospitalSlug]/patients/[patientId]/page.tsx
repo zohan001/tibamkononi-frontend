@@ -19,7 +19,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
 import { useHospital } from '@/hooks/use-hospitals';
-import { usePatient } from '@/hooks/use-patients';
+import { usePatient, useDiagnosis } from '@/hooks/use-patients';
+import { DiseaseProbabilityCards } from '@/components/ai/disease-probability-cards';
+import { MedicineRecommendationCards } from '@/components/ai/medicine-recommendation-cards';
 
 export default function PatientDetailsPage() {
 
@@ -31,6 +33,8 @@ export default function PatientDetailsPage() {
   const { data: hospital } = useHospital(slug);
 
   const { data: patient } = usePatient(slug, patientId);
+
+  const { data: diagnosis } = useDiagnosis(slug, patientId);
 
   if (!patient) {
     return (
@@ -303,6 +307,74 @@ export default function PatientDetailsPage() {
           </Card>
 
         </div>
+
+        {/* AI Disease Probability Analysis */}
+
+        {diagnosis && diagnosis.diseases.length > 0 && (
+          <Card>
+
+            <CardHeader>
+
+              <CardTitle className="flex items-center gap-2">
+
+                <Sparkles className="text-purple-600 h-5 w-5"/>
+
+                AI Disease Probability Analysis
+
+              </CardTitle>
+
+            </CardHeader>
+
+            <CardContent>
+
+              <DiseaseProbabilityCards
+                diseases={diagnosis.diseases.map((d) => ({
+                  name: d.name,
+                  probability: d.probability,
+                  confidence: Math.round(d.probability * 100),
+                  explanation: '',
+                }))}
+              />
+
+            </CardContent>
+
+          </Card>
+        )}
+
+        {/* AI Medicine Recommendations */}
+
+        {diagnosis && diagnosis.recommendedTreatment.length > 0 && (
+          <Card>
+
+            <CardHeader>
+
+              <CardTitle className="flex items-center gap-2">
+
+                <Pill className="text-green-600 h-5 w-5"/>
+
+                AI Medicine Recommendations
+
+              </CardTitle>
+
+            </CardHeader>
+
+            <CardContent>
+
+              <MedicineRecommendationCards
+                medicines={diagnosis.recommendedTreatment.map((t) => ({
+                  name: t.medicine,
+                  dosage: t.dosage,
+                  frequency: t.frequency,
+                  duration: 'As prescribed',
+                  reason: '',
+                  confidence: 85,
+                }))}
+              />
+
+            </CardContent>
+
+          </Card>
+        )}
 
         <Card>
 

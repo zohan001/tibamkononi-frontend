@@ -15,6 +15,10 @@ import { CountyDigitalTwin } from '@/components/county/county-digital-twin';
 import { OutbreakMonitor } from '@/components/county/outbreak-monitor';
 import { CountyHealthMap } from '@/components/county/county-health-map';
 import { AIExecutiveBriefing } from '@/components/county/ai-executive-briefing';
+import { CountyAnalyticsDashboard } from '@/components/county/county-analytics-dashboard';
+import { InventoryAnalytics } from '@/components/county/inventory-analytics';
+import { EmergencyAnalytics } from '@/components/county/emergency-analytics';
+import { AIStatisticsPanel } from '@/components/county/ai-statistics-panel';
 
 export default function CountyDashboardPage() {
   const { data: dashboardData, isLoading: dashboardLoading } = useCountyDashboard();
@@ -173,6 +177,28 @@ Gemma has analyzed all hospitals.
 </CardContent>
 
 </Card>
+
+        <CountyAnalyticsDashboard
+          stats={{
+            totalHospitals: stats.hospitalsActive.value,
+            totalPatients: stats.bedsAvailable.value,
+            emergencies: stats.criticalAlerts.value,
+            staff: stats.distressSignals.value,
+          }}
+        />
+
+        <div className="grid gap-6 mt-8 lg:grid-cols-2">
+          <InventoryAnalytics items={[]} />
+          <EmergencyAnalytics
+            data={{
+              activeIncidents: stats.criticalAlerts.value,
+            }}
+          />
+        </div>
+
+        <div className="mt-8">
+          <AIStatisticsPanel />
+        </div>
 
         <CountyOverview stats={stats} />
         <div className="grid lg:grid-cols-3 gap-6 mt-8">

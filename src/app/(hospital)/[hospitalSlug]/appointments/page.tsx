@@ -3,15 +3,18 @@
 import { useParams } from 'next/navigation';
 import { HospitalSidebar } from '@/components/layout/hospital-sidebar';
 import { AppointmentScheduler } from '@/components/hospital/appointment-scheduler';
+import { AppointmentCalendar } from '@/components/appointments/appointment-calendar';
+import { DoctorSchedule } from '@/components/appointments/doctor-schedule';
 import { useAppointments } from '@/hooks/use-appointments';
 import { Loader2, Calendar, Clock, UserRound } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
 interface TimeSlot {
   time: string;
-  doctorName: string;
+  doctorName?: string;
   available: boolean;
+  patientName?: string;
 }
 
 interface DaySchedule {
@@ -92,6 +95,57 @@ export default function HospitalAppointmentsPage() {
             ))}
           </div>
         )}
+
+        <div className="grid lg:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Appointment Calendar</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <AppointmentCalendar
+                appointments={(appointments || []).map((apt) => ({
+                  date: apt.date,
+                  time: apt.time,
+                  patientName: apt.patientName,
+                  doctor: apt.doctorName,
+                  status: apt.status,
+                }))}
+              />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Doctor Schedules</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {(() => {
+                const doctors = new Map<string, typeof schedules>();
+                (appointments || []).forEach((apt) => {
+                  const existing = doctors.get(apt.doctorName);
+                  const day = new Date(apt.date).toLocaleDateString('en-US', { weekday: 'long' });
+                  if (existing) {
+                    const dayEntry = existing.find((s) => s.day === day);
+                    if (dayEntry) {
+                      dayEntry.slots.push({ time: apt.time, available: apt.status !== 'cancelled', patientName: apt.patientName });
+                    } else {
+                      existing.push({ day, slots: [{ time: apt.time, available: apt.status !== 'cancelled', patientName: apt.patientName }] });
+                    }
+                  } else {
+                    doctors.set(apt.doctorName, [{ day, slots: [{ time: apt.time, available: apt.status !== 'cancelled', patientName: apt.patientName }] }]);
+                  }
+                });
+                const entries = Array.from(doctors.entries());
+                if (entries.length === 0) {
+                  return <p className="text-sm text-muted-foreground">No doctor schedules available.</p>;
+                }
+                return entries.map(([name, schedule]) => (
+                  <DoctorSchedule key={name} doctorName={name} schedule={schedule} />
+                ));
+              })()}
+            </CardContent>
+          </Card>
+        </div>
 
         <AppointmentScheduler
           onBook={(apt) => {
