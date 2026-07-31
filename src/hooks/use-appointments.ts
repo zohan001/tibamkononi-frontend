@@ -26,7 +26,7 @@ export function useAppointments(hospitalSlug?: string) {
 export function useBookAppointment() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: unknown) => api.post('/appointments/book', data),
+    mutationFn: (data: unknown) => api.post('/appointments', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['appointments'] });
     },

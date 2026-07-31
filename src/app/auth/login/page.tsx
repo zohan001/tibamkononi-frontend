@@ -1,17 +1,24 @@
 'use client';
 
 import { useState } from 'react';
-import { Mail, Lock, LogIn, Info } from 'lucide-react';
+import { Mail, Lock, LogIn, Info, Loader2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
+import { useLogin } from '@/hooks/use-auth';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [remember, setRemember] = useState(false);
+  const loginMutation = useLogin();
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    loginMutation.mutate({ email, password });
+  };
 
   return (
     <main className="min-h-screen bg-slate-100">
@@ -41,7 +48,13 @@ export default function LoginPage() {
               </p>
             </div>
 
-            <div className="space-y-4">
+            {loginMutation.isError && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm">
+                {loginMutation.error.message || 'Invalid email or password'}
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <div className="relative">
@@ -53,6 +66,7 @@ export default function LoginPage() {
                     className="pl-10"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    required
                   />
                 </div>
               </div>
@@ -68,6 +82,7 @@ export default function LoginPage() {
                     className="pl-10"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    required
                   />
                 </div>
               </div>
@@ -90,12 +105,16 @@ export default function LoginPage() {
                   Forgot password?
                 </a>
               </div>
-            </div>
 
-            <Button className="w-full" size="lg">
-              <LogIn className="mr-2 h-4 w-4" />
-              Sign In
-            </Button>
+              <Button type="submit" className="w-full" size="lg" disabled={loginMutation.isPending}>
+                {loginMutation.isPending ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <LogIn className="mr-2 h-4 w-4" />
+                )}
+                {loginMutation.isPending ? 'Signing in...' : 'Sign In'}
+              </Button>
+            </form>
 
             <p className="text-center text-sm text-muted-foreground">
               Don&apos;t have an account?{' '}

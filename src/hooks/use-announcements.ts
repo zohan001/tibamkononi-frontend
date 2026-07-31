@@ -15,7 +15,7 @@ export function useAnnouncements() {
 export function useCreateAnnouncement() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: unknown) => api.post('/announcements/create', data),
+    mutationFn: (data: unknown) => api.post('/announcements', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['announcements'] });
     },

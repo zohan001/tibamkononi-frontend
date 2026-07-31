@@ -23,7 +23,7 @@ export function useHospital(slug: string) {
 export function useRegisterHospital() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: unknown) => api.post('/hospitals/register', data),
+    mutationFn: (data: unknown) => api.post('/hospitals', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['hospitals'] });
     },
