@@ -27,7 +27,19 @@ app.use(
   })
 );
 
+app.get('/', (req, res) => {
+  res.json({
+    name: 'Tibamkononi API',
+    status: 'ok',
+    version: 'v1',
+    health: '/v1/health',
+    endpoints: ['/v1/auth', '/v1/hospitals', '/v1/inventory', '/v1/county', '/v1/emergency'],
+  });
+});
+
 app.use('/v1', routes);
+
+app.get(['/v1', '/v1/'], (req, res) => res.redirect('/v1/health'));
 
 app.use(notFound);
 app.use(errorHandler);
