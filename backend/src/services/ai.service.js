@@ -21,6 +21,48 @@ if (env.geminiApiKey) {
 
 const hasGemini = () => !!genAI;
 
+function extractJson(text) {
+  const cleaned = String(text).replace(/```json\s*/i, '').replace(/```/g, '').trim();
+  const candidates = [];
+  for (let i = 0; i < cleaned.length; i++) {
+    const ch = cleaned[i];
+    if (ch !== '{' && ch !== '[') continue;
+    const close = ch === '{' ? '}' : ']';
+    let depth = 0;
+    let inString = false;
+    let escaped = false;
+    let j = i;
+    for (; j < cleaned.length; j++) {
+      const c = cleaned[j];
+      if (inString) {
+        if (escaped) escaped = false;
+        else if (c === '\\') escaped = true;
+        else if (c === '"') inString = false;
+        continue;
+      }
+      if (c === '"') {
+        inString = true;
+        continue;
+      }
+      if (c === ch) depth++;
+      else if (c === close) {
+        depth--;
+        if (depth === 0) break;
+      }
+    }
+    if (depth === 0) candidates.push(cleaned.slice(i, j + 1));
+    i = j;
+  }
+  for (let k = candidates.length - 1; k >= 0; k--) {
+    try {
+      return JSON.parse(candidates[k]);
+    } catch {
+      // try the previous candidate
+    }
+  }
+  return null;
+}
+
 async function askGemini(systemPrompt, userText, fallback) {
   if (!genAI) return fallback;
   try {
@@ -30,8 +72,8 @@ async function askGemini(systemPrompt, userText, fallback) {
     });
     const prompt = `${systemPrompt}\n\nReturn ONLY valid JSON, no markdown, no commentary.\n\nInput:\n${userText}`;
     const result = await model.generateContent(prompt);
-    const text = result.response.text().trim();
-    const json = JSON.parse(text.replace(/^```json\s*/i, '').replace(/```$/i, '').trim());
+    const json = extractJson(result.response.text());
+    if (json === null) throw new Error('no valid JSON found in model output');
     return json;
   } catch (err) {
     console.warn('[ai] Gemini call failed, using built-in engine:', err.message);
