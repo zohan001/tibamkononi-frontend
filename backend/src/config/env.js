@@ -15,7 +15,7 @@ const env = {
     .map((s) => s.trim())
     .filter(Boolean),
   geminiApiKey: process.env.GEMINI_API_KEY || '',
-  geminiModel: process.env.GEMINI_MODEL || 'gemini-1.5-flash',
+  geminiModel: process.env.GEMINI_MODEL || 'gemma-4-26b-a4b-it',
 };
 
 export default env;
