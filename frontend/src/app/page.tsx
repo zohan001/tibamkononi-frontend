@@ -22,6 +22,8 @@ import { GemmaBadge } from '@/components/shared/gemma-badge';
 
 import { useCountyDashboard } from '@/hooks/use-county';
 
+import { HospitalLoginPicker } from '@/components/hospital/hospital-login-picker';
+
 const features = [
   {
     icon: Building2,
@@ -127,6 +129,8 @@ Try AI Triage
 </Button>
 
 </Link>
+
+<HospitalLoginPicker />
 
 </div>
 

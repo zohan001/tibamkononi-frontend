@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
-import { Mail, Lock, LogIn, Info, Loader2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { Mail, Lock, LogIn, Info, Building2, Loader2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,7 +14,16 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [remember, setRemember] = useState(false);
+  const [hospital, setHospital] = useState<{ slug: string; name: string } | null>(null);
   const loginMutation = useLogin();
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const slug = params.get('hospital');
+    if (!slug) return;
+    const name = params.get('name') ? decodeURIComponent(params.get('name') as string) : '';
+    setHospital({ slug, name });
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,6 +61,20 @@ export default function LoginPage() {
             {loginMutation.isError && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm">
                 {loginMutation.error.message || 'Invalid email or password'}
+              </div>
+            )}
+
+            {hospital && (
+              <div className="flex items-center justify-between gap-3 rounded-md bg-blue-50 border border-blue-200 px-4 py-3 text-sm text-blue-700">
+                <span className="flex min-w-0 items-center gap-2">
+                  <Building2 className="h-4 w-4 shrink-0" />
+                  <span className="truncate">
+                    Sign in to <strong>{hospital.name || hospital.slug}</strong>
+                  </span>
+                </span>
+                <Link href="/" className="shrink-0 font-medium text-blue-600 hover:underline">
+                  Change hospital
+                </Link>
               </div>
             )}
 
