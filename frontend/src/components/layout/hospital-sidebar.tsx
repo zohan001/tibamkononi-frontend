@@ -32,7 +32,7 @@ const sidebarItems = [
 
 export function HospitalSidebar({ hospitalSlug, hospitalName }: HospitalSidebarProps) {
   const pathname = usePathname();
-  const base = `/hospital-portal/${hospitalSlug}`;
+  const base = `/${hospitalSlug}`;
 
   return (
     <aside className="flex h-full w-60 flex-col border-r bg-card">

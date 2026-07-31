@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import Link from 'next/link';
 import { Search, AlertCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,6 +10,7 @@ import { Brain } from "lucide-react";
 
 interface HospitalListItem {
   id: string;
+  slug: string;
   name: string;
   status: 'approved' | 'pending' | 'suspended';
 
@@ -210,11 +212,11 @@ Gemma AI
 
 <div className="flex gap-3 mt-6">
 
-<Button>
+              <Button render={<Link href={`/county/hospitals/${hospital.slug || hospital.id}`}/>}>
 
-View Hospital
+                View Hospital
 
-</Button>
+              </Button>
 
 <Button variant="outline">
 

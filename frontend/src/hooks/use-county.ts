@@ -13,6 +13,7 @@ interface CountyDashboard {
 
 interface CountyHospital {
   id: string;
+  slug: string;
   name: string;
   status: 'approved' | 'pending' | 'suspended';
   alertCount: number;

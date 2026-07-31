@@ -8,8 +8,10 @@ import {
   Phone,
   MapPin,
   User,
+  Lock,
   Sparkles,
   CheckCircle,
+  Loader2,
 } from 'lucide-react';
 
 import { Card, CardContent } from '@/components/ui/card';
@@ -25,14 +27,17 @@ interface RegistrationFormData {
   address: string;
   county: string;
   description: string;
+  password: string;
 }
 
 interface RegistrationFormProps {
   onSubmit: (data: RegistrationFormData) => void;
+  submitting?: boolean;
 }
 
 export function RegistrationForm({
   onSubmit,
+  submitting = false,
 }: RegistrationFormProps) {
 
   const [form, setForm] = useState<RegistrationFormData>({
@@ -43,6 +48,7 @@ export function RegistrationForm({
     address: '',
     county: '',
     description: '',
+    password: '',
   });
 
   const update = (
@@ -149,6 +155,38 @@ export function RegistrationForm({
               />
 
             </div>
+
+          </div>
+
+          <div>
+
+            <label className="font-medium mb-2 block">
+
+              Administrator Password
+
+            </label>
+
+            <div className="relative">
+
+              <Lock className="absolute left-3 top-3 h-5 w-5 text-slate-400"/>
+
+              <Input
+                type="password"
+                className="pl-10"
+                placeholder="Set the admin login password"
+                value={form.password}
+                onChange={(e) =>
+                  update('password', e.target.value)
+                }
+              />
+
+            </div>
+
+            <p className="text-xs text-slate-400 mt-1">
+
+              Your administrator uses this email + password to sign in after approval.
+
+            </p>
 
           </div>
 
@@ -265,12 +303,17 @@ export function RegistrationForm({
 
         <Button
           className="w-full h-12"
+          disabled={submitting}
           onClick={() => onSubmit(form)}
         >
 
-          <CheckCircle className="mr-2 h-5 w-5"/>
+          {submitting ? (
+            <Loader2 className="mr-2 h-5 w-5 animate-spin"/>
+          ) : (
+            <CheckCircle className="mr-2 h-5 w-5"/>
+          )}
 
-          Register Hospital
+          {submitting ? 'Submitting Registration...' : 'Register Hospital'}
 
         </Button>
 
