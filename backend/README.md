@@ -36,6 +36,7 @@ src/
 └── seed.js           Demo data
 ```
 
-See `../doc/API.md` for the full API reference and `../doc/DEPLOYMENT.md`
-for production notes. AI features use `@google/generative-ai`; without a
-`GEMINI_API_KEY` they fall back to heuristic responses.
+See `../frontend/doc/API.md` for the full API reference and
+`../frontend/doc/DEPLOYMENT.md` for production notes. AI features use
+`@google/generative-ai`; without a `GEMINI_API_KEY` they fall back to
+heuristic responses.

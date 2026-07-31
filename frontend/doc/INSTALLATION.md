@@ -58,7 +58,6 @@ Backend serves on `http://localhost:5000/v1` with a health check at
 ## Frontend Setup
 
 ```bash
-cd ..   # repo root
 npm install
 ```
 

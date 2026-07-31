@@ -25,8 +25,7 @@ reporting, and analytics.
 ```
 tibamkononi-frontend/
 ├── backend/          Express + MongoDB REST API (see backend/README)
-├── doc/              Documentation (API, architecture, deployment, testing)
-└── src/              Next.js frontend (App Router)
+└── frontend/         Next.js frontend (App Router) + all documentation (frontend/doc)
 ```
 
 ## Tech Stack
@@ -40,7 +39,7 @@ tibamkononi-frontend/
 
 ## Quick Start
 
-See `doc/INSTALLATION.md`. Summary:
+See `frontend/doc/INSTALLATION.md`. Summary:
 
 ```bash
 # MongoDB (Docker)
@@ -49,8 +48,8 @@ docker run -d --name tibamkononi-mongo -p 27017:27017 mongo:4.4
 # Backend
 cd backend && npm install && npm run seed && npm run dev
 
-# Frontend (repo root)
-npm install && npm run dev
+# Frontend
+cd frontend && npm install && npm run dev
 ```
 
 Frontend: http://localhost:3000 — Backend: http://localhost:5000/v1
@@ -59,9 +58,9 @@ Demo admin login: `admin@tibamkononi.co.ke` / `admin123`
 
 ## Documentation
 
-- `doc/API.md` — REST API reference
-- `doc/ARCHITECTURE.md` — system architecture
-- `doc/DATABASE.md` — data model
-- `doc/INSTALLATION.md` — setup guide
-- `doc/DEPLOYMENT.md` — production deployment
-- `doc/TESTING.md` — testing strategy
+- `frontend/doc/API.md` — REST API reference
+- `frontend/doc/ARCHITECTURE.md` — system architecture
+- `frontend/doc/DATABASE.md` — data model
+- `frontend/doc/INSTALLATION.md` — setup guide
+- `frontend/doc/DEPLOYMENT.md` — production deployment
+- `frontend/doc/TESTING.md` — testing strategy

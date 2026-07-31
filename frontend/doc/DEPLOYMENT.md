@@ -40,7 +40,7 @@ development use `http://localhost:5000/v1`.
 1. Clone the repository.
 2. Start MongoDB (`docker run -d --name tibamkononi-mongo -p 27017:27017 mongo:4.4`).
 3. `cd backend && npm install`, create `.env`, then `npm run seed` and `npm run dev`.
-4. `cd .. && npm install`, create `.env.local`, then `npm run dev`.
+4. `cd frontend && npm install`, create `.env.local`, then `npm run dev`.
 5. Verify `/v1/health` and the login page.
 
 ## Production Deployment
