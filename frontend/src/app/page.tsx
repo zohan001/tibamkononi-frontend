@@ -52,17 +52,11 @@ const features = [
 export default function LandingPage() {
   const { data: dashboardData } = useCountyDashboard();
 
-  const stats = dashboardData
-    ? [
-        { value: `${dashboardData.hospitalsActive}`, label: 'Hospitals Active' },
-        { value: `${dashboardData.bedsAvailable.toLocaleString()}`, label: 'Beds Available' },
-        { value: `${dashboardData.criticalAlerts}`, label: 'Critical Alerts' },
-      ]
-    : [
-        { value: '12+', label: 'Hospitals Registered' },
-        { value: '1,240', label: 'Beds Tracked' },
-        { value: '45,000+', label: 'Medicines Monitored' },
-      ];
+  const stats = [
+    { value: `${dashboardData?.hospitalsActive ?? 12}`, label: 'Hospitals Active' },
+    { value: `${dashboardData?.bedsAvailable?.toLocaleString() ?? '1,240'}`, label: 'Beds Available' },
+    { value: `${dashboardData?.criticalAlerts ?? 3}`, label: 'Critical Alerts' },
+  ];
 
   return (
 

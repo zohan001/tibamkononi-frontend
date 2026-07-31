@@ -59,12 +59,15 @@ export function MainHeader() {
 
         <div className="flex items-center gap-2">
           <LanguageSwitcher />
-          <Button variant="ghost" size="icon-sm" className="rounded-full" as-child>
-            <Link href="/profile">
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            className="rounded-full"
+            render={<Link href="/profile" />}
+          >
               <span className="flex h-7 w-7 items-center justify-center rounded-full bg-muted text-xs font-medium">
                 U
               </span>
-            </Link>
           </Button>
           <Button
             variant="ghost"
